@@ -160,51 +160,112 @@ function! s:GetChar()
   return l:char
 endfunction
 
+" Label windows with winnr and return existing status lines.
+function! s:LabelWindows()
+  let l:win_id = win_getid()
+  let l:num_wins = winnr('$')
+  let l:winnr = 1
+  let l:status_lines = {}
+  while l:winnr <= l:num_wins
+    execute l:winnr . 'wincmd w'
+    :let l:status_lines[l:winnr] = &l:statusline
+    " TODO: better status line
+    execute 'setlocal statusline=' . l:winnr
+    let l:winnr += 1
+  endwhile
+  call win_gotoid(l:win_id)
+  return l:status_lines
+endfunction
+
+" Revert s:LabelWindows, using existing status lines.
+function! s:RevertLabelWindows(status_lines)
+  let l:win_id = win_getid()
+  for l:winnr in keys(a:status_lines)
+    execute l:winnr . 'wincmd w'
+    let &l:statusline = a:status_lines[l:winnr]
+  endfor
+  call win_gotoid(l:win_id)
+endfunction
+
+let s:esc_chars = [
+      \    char2nr("\<esc>"),
+      \    char2nr('q'),
+      \    char2nr('Q'),
+      \    char2nr("\<c-d>"),
+      \ ]
+let s:left_chars = [char2nr('h'), "\<left>", "\<bs>"]
+let s:down_chars = [char2nr('j'), "\<down>"]
+let s:up_chars = [char2nr('k'), "\<up>"]
+let s:right_chars = [char2nr('l'), "\<right>", char2nr(' ')]
+let s:shift_left_chars = [char2nr('H'), "\<s-left>", "\<s-bs>"]
+let s:shift_down_chars = [char2nr('J'), "\<s-down>"]
+let s:shift_up_chars = [char2nr('K'), "\<s-up>"]
+let s:shift_right_chars = [char2nr('L'), "\<s-right>", "\<s-space>"]
+let s:window_selection_chars = [char2nr('w'), char2nr('W'), char2nr("\<c-w>")]
+let s:digit_chars = []
+for s:digit in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+  call add(s:digit_chars, char2nr(s:digit))
+endfor
+let s:help_lines = [
+      \   '[winresize] (help)',
+      \   '',
+      \   'Use the hjkl movement keys to resize windows.',
+      \   'Holding <shift> modifies which border shifts.',
+      \   'Press w to enter window selection mode.',
+      \   'Press <esc> to return or go back (where applicable).',
+      \   '',
+      \   '[Press any key to continue]',
+      \ ]
+" TODO: Add window selection mode help documentation
+" TODO: Or possibly get rid of window selection mode by integrating its
+" functionaliity into the main mode.
+" TODO: Change defaults so that hjkl (without <shift>) move the bottom and
+" right borders.
+
 function! WinResize()
-  let l:esc_chars = [char2nr("\<esc>"), char2nr('q'), char2nr('Q')]
-  let l:left_chars = [char2nr('h'), "\<left>", "\<bs>"]
-  let l:down_chars = [char2nr('j'), "\<down>"]
-  let l:up_chars = [char2nr('k'), "\<up>"]
-  let l:right_chars = [char2nr('l'), "\<right>", char2nr(' ')]
-  let l:shift_left_chars = [char2nr('H'), "\<s-left>", "\<s-bs>"]
-  let l:shift_down_chars = [char2nr('J'), "\<s-down>"]
-  let l:shift_up_chars = [char2nr('K'), "\<s-up>"]
-  let l:shift_right_chars = [char2nr('L'), "\<s-right>", "\<s-space>"]
   while 1
-    redraw | echo '<winresize>'
+    redraw | echo '[winresize]'
     let l:char = s:GetChar()
-    if index(l:esc_chars, l:char) !=# -1
+    if index(s:esc_chars, l:char) !=# -1
       break
     elseif l:char ==# char2nr('?')
-      " TODO: real help
-      echo 'HELP'
-    elseif l:char ==# char2nr('w') || l:char ==# char2nr('W')
-      redraw | echo '<winresize> (change active window)'
+      redraw | echo join(s:help_lines, "\n")
+      call s:GetChar()
+    elseif index(s:window_selection_chars, l:char) !=# -1
+      let status_lines = s:LabelWindows()
+      redraw | echo '[winresize] (window selection mode)'
       let l:char2 = s:GetChar()
-      if index(l:left_chars + l:shift_left_chars, l:char2) !=# -1
+      if index(s:digit_chars, l:char2) != -1
+        " TODO: support windows higher than 9 (failiing on 0 or numbers out of
+        " range.
+        if str2nr(nr2char(l:char2)) ># 0
+          silent! execute nr2char(l:char2) . 'wincmd w'
+        endif
+      elseif index(s:left_chars + s:shift_left_chars, l:char2) !=# -1
         execute "normal \<c-w>h"
-      elseif index(l:down_chars + l:shift_down_chars, l:char2) !=# -1
+      elseif index(s:down_chars + s:shift_down_chars, l:char2) !=# -1
         execute "normal \<c-w>j"
-      elseif index(l:up_chars + l:shift_up_chars, l:char2) !=# -1
+      elseif index(s:up_chars + s:shift_up_chars, l:char2) !=# -1
         execute "normal \<c-w>k"
-      elseif index(l:right_chars + l:shift_right_chars, l:char2) !=# -1
+      elseif index(s:right_chars + s:shift_right_chars, l:char2) !=# -1
         execute "normal \<c-w>l"
       endif
-    elseif index(l:left_chars, l:char) !=# -1
+      call s:RevertLabelWindows(l:status_lines)
+    elseif index(s:left_chars, l:char) !=# -1
       call WinResizeLeftLeft()
-    elseif index(l:down_chars, l:char) !=# -1
+    elseif index(s:down_chars, l:char) !=# -1
       call WinResizeTopDown()
-    elseif index(l:up_chars, l:char) !=# -1
+    elseif index(s:up_chars, l:char) !=# -1
       call WinResizeTopUp()
-    elseif index(l:right_chars, l:char) !=# -1
+    elseif index(s:right_chars, l:char) !=# -1
       call WinResizeLeftRight()
-    elseif index(l:shift_left_chars, l:char) !=# -1
+    elseif index(s:shift_left_chars, l:char) !=# -1
       call WinResizeRightLeft()
-    elseif index(l:shift_down_chars, l:char) !=# -1
+    elseif index(s:shift_down_chars, l:char) !=# -1
       call WinResizeBottomDown()
-    elseif index(l:shift_up_chars, l:char) !=# -1
+    elseif index(s:shift_up_chars, l:char) !=# -1
       call WinResizeBottomUp()
-    elseif index(l:shift_right_chars, l:char) !=# -1
+    elseif index(s:shift_right_chars, l:char) !=# -1
       call WinResizeRightRight()
     endif
   endwhile
