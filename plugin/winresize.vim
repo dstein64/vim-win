@@ -1,5 +1,7 @@
 " TODO: handle range/count (visual selection)?
 
+let g:winresize_toggle_key = '<leader>r'
+
 let g:winresize_height = 2
 let g:winresize_width = 2
 
@@ -149,28 +151,65 @@ function! WinResizeLeftRight()
   call s:SetWinWidthWinHeight(l:winwidth, l:winheight)
 endfunction
 
+function! s:GetChar()
+  try
+    let l:char = getchar()
+  catch
+    let l:char = char2nr("\<esc>")
+  endtry
+  return l:char
+endfunction
 
-command! WinResizeBottomUp :call WinResizeBottomUp()
-noremap <silent> <up> :WinResizeBottomUp<cr>
+function! WinResize()
+  let l:esc_chars = [char2nr("\<esc>"), char2nr('q'), char2nr('Q')]
+  let l:left_chars = [char2nr('h'), "\<left>", "\<bs>"]
+  let l:down_chars = [char2nr('j'), "\<down>"]
+  let l:up_chars = [char2nr('k'), "\<up>"]
+  let l:right_chars = [char2nr('l'), "\<right>", char2nr(' ')]
+  let l:shift_left_chars = [char2nr('H'), "\<s-left>", "\<s-bs>"]
+  let l:shift_down_chars = [char2nr('J'), "\<s-down>"]
+  let l:shift_up_chars = [char2nr('K'), "\<s-up>"]
+  let l:shift_right_chars = [char2nr('L'), "\<s-right>", "\<s-space>"]
+  while 1
+    redraw | echo '<winresize>'
+    let l:char = s:GetChar()
+    if index(l:esc_chars, l:char) !=# -1
+      break
+    elseif l:char ==# char2nr('?')
+      " TODO: real help
+      echo 'HELP'
+    elseif l:char ==# char2nr('w') || l:char ==# char2nr('W')
+      redraw | echo '<winresize> (change active window)'
+      let l:char2 = s:GetChar()
+      if index(l:left_chars + l:shift_left_chars, l:char2) !=# -1
+        execute "normal \<c-w>h"
+      elseif index(l:down_chars + l:shift_down_chars, l:char2) !=# -1
+        execute "normal \<c-w>j"
+      elseif index(l:up_chars + l:shift_up_chars, l:char2) !=# -1
+        execute "normal \<c-w>k"
+      elseif index(l:right_chars + l:shift_right_chars, l:char2) !=# -1
+        execute "normal \<c-w>l"
+      endif
+    elseif index(l:left_chars, l:char) !=# -1
+      call WinResizeLeftLeft()
+    elseif index(l:down_chars, l:char) !=# -1
+      call WinResizeTopDown()
+    elseif index(l:up_chars, l:char) !=# -1
+      call WinResizeTopUp()
+    elseif index(l:right_chars, l:char) !=# -1
+      call WinResizeLeftRight()
+    elseif index(l:shift_left_chars, l:char) !=# -1
+      call WinResizeRightLeft()
+    elseif index(l:shift_down_chars, l:char) !=# -1
+      call WinResizeBottomDown()
+    elseif index(l:shift_up_chars, l:char) !=# -1
+      call WinResizeBottomUp()
+    elseif index(l:shift_right_chars, l:char) !=# -1
+      call WinResizeRightRight()
+    endif
+  endwhile
+  redraw | echo ''
+endfunction
+command! WinResize :call WinResize()
 
-command! WinResizeBottomDown :call WinResizeBottomDown()
-noremap <silent> <down> :WinResizeBottomDown<cr>
-
-command! WinResizeTopUp :call WinResizeTopUp()
-noremap <silent> <up> :WinResizeTopUp<cr>
-
-command! WinResizeTopDown :call WinResizeTopDown()
-noremap <silent> <down> :WinResizeTopDown<cr>
-
-command! WinResizeRightLeft :call WinResizeRightLeft()
-noremap <silent> <left> :WinResizeRightLeft<cr>
-
-command! WinResizeRightRight :call WinResizeRightRight()
-noremap <silent> <right> :WinResizeRightRight<cr>
-
-command! WinResizeLeftLeft :call WinResizeLeftLeft()
-noremap <silent> <left> :WinResizeLeftLeft<cr>
-
-command! WinResizeLeftRight :call WinResizeLeftRight()
-noremap <silent> <right> :WinResizeLeftRight<cr>
-
+noremap <silent> <leader>r :WinResize<cr>
