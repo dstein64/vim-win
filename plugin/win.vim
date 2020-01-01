@@ -1,5 +1,8 @@
 " TODO: handle range/count (visual selection)?
 " TODO: autoload
+" TODO: show active window with (*) after number. will require more calls to
+" LabelWindows (and possibly the revert function).
+" TODO: include buffer name in your window label
 
 " Set g:force_reload_win = 1 to force load.
 if !get(g:, 'force_load_win', 0) && exists('g:loaded_win')
@@ -304,7 +307,6 @@ function! s:Win()
     elseif index(s:window_swap_chars, l:char) !=# -1
       let l:swap_win = s:GetWindowNr()
       call s:RevertLabelWindows(l:status_lines)
-      "execute l:swap_win . 'wincmd x'
       call s:Swap(l:swap_win)
       let status_lines = s:LabelWindows()
     elseif index(s:window_selection_chars, l:char) !=# -1
