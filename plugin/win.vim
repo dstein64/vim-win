@@ -199,11 +199,6 @@ function! s:GetChar()
   return l:char
 endfunction
 
-" Keep track of floatwin buffer numbers, so they can be reused. This prevents
-" the buffer list numbers from getting increasingly high from usage of
-" win.vim.
-let s:floatwin_buffers = []
-
 " Label windows with winnr and return winids of the labels.
 function! s:AddWindowLabels()
   let l:label_winids = []
@@ -215,22 +210,28 @@ function! s:AddWindowLabels()
     let l:is_active = l:winnr ==# winnr()
     let l:label = '[' . l:winnr . (l:is_active ? '*]' : ']')
     let l:label = l:label[:winwidth(l:winnr) - 1]
-    " TODO: bold for active window.
+    let l:highlight = l:winnr ==# winnr() ? 'DiffAdd' : 'Todo'
     if s:popupwin
       " When there are 2 or less columns in a rightmost window, popup text
       " starts on top of the vertical separator line.
       if l:col >=# &columns - 1 | continue | endif
       let l:options = {
+            \   'highlight': l:highlight,
             \   'line': l:row,
             \   'col': l:col,
             \ }
       let l:label_winid = popup_create(l:label, l:options)
       call add(l:label_winids, l:label_winid)
     elseif s:floatwin
-      if l:winnr > len(s:floatwin_buffers)
-        call add(s:floatwin_buffers, nvim_create_buf(0, 1))
+      " Keep track of floatwin buffer numbers, so they can be reused. This prevents
+      " the buffer list numbers from getting high from usage of win.vim.
+      if !has_key(s:, 'floatwin_bufnrs')
+        let s:floatwin_bufnrs = []
       endif
-      let l:buf = s:floatwin_buffers[l:winnr - 1]
+      if l:winnr > len(s:floatwin_bufnrs)
+        call add(s:floatwin_bufnrs, nvim_create_buf(0, 1))
+      endif
+      let l:buf = s:floatwin_bufnrs[l:winnr - 1]
       call nvim_buf_set_lines(l:buf, 0, -1, 1, [l:label])
       let l:options = {
             \   'relative': 'win',
@@ -242,12 +243,15 @@ function! s:AddWindowLabels()
             \   'col': 0
             \ }
       let l:label_winid = nvim_open_win(l:buf, 0, l:options)
+      let l:winhighlight = 'Normal:' . l:highlight
+      call setwinvar(win_id2win(l:label_winid), '&winhighlight', l:winhighlight)
       call add(l:label_winids, l:label_winid)
     endif
   endfor
   return l:label_winids
 endfunction
 
+" Remove the specified windows, and empty the list.
 function! s:RemoveWindowLabels(label_winids)
   for l:label_winid in a:label_winids
     if s:popupwin
@@ -258,6 +262,7 @@ function! s:RemoveWindowLabels(label_winids)
       call nvim_win_close(l:label_winid, 1)
     endif
   endfor
+  call remove(a:label_winids, 0, -1)
 endfunction
 
 let s:esc_chars = [
@@ -343,7 +348,7 @@ function! s:Win()
       let l:swap_win = s:GetWindowNr()
       call s:Swap(l:swap_win)
     elseif index(s:window_selection_chars, l:char) !=# -1
-      " have to properly show key entered
+      " TODO have to properly show key entered
       redraw | echo 'win> w'
       let l:target = s:GetWindowNr()
       execute l:target . 'wincmd w'
@@ -367,7 +372,6 @@ function! s:Win()
       let l:prompt = 'win (press ? for help)> '
     endif
     call s:RemoveWindowLabels(l:label_winids)
-    let l:label_winids = []
   endwhile
   call s:RemoveWindowLabels(l:label_winids)
   redraw | echo ''
