@@ -2,7 +2,7 @@
 " TODO: autoload
 " TODO: alternative approach for resizing windows (current doesn't always
 " work properly)..
-" TODO: highlight status line?
+" TODO: highlight status line? (change color when error?)
 
 " Set g:force_load_win = 1 to force load.
 if !get(g:, 'force_load_win', 0) && exists('g:loaded_win')
