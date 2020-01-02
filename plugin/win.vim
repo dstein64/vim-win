@@ -199,6 +199,11 @@ function! s:GetChar()
   return l:char
 endfunction
 
+" Keep track of floatwin buffer numbers, so they can be reused. This prevents
+" the buffer list numbers from getting increasingly high from usage of
+" win.vim.
+let s:floatwin_buffers = []
+
 " Label windows with winnr and return winids of the labels.
 function! s:AddWindowLabels()
   let l:label_winids = []
@@ -222,7 +227,10 @@ function! s:AddWindowLabels()
       let l:label_winid = popup_create(l:label, l:options)
       call add(l:label_winids, l:label_winid)
     elseif s:floatwin
-      let l:buf = nvim_create_buf(0, 1)
+      if l:winnr > len(s:floatwin_buffers)
+        call add(s:floatwin_buffers, nvim_create_buf(0, 1))
+      endif
+      let l:buf = s:floatwin_buffers[l:winnr - 1]
       call nvim_buf_set_lines(l:buf, 0, -1, 1, [l:label])
       let l:options = {
             \   'relative': 'win',
@@ -233,7 +241,7 @@ function! s:AddWindowLabels()
             \   'row': 0,
             \   'col': 0
             \ }
-      let l:label_winid =  nvim_open_win(l:buf, 0, l:options)
+      let l:label_winid = nvim_open_win(l:buf, 0, l:options)
       call add(l:label_winids, l:label_winid)
     endif
   endfor
@@ -245,9 +253,9 @@ function! s:RemoveWindowLabels(label_winids)
     if s:popupwin
       call popup_close(l:label_winid)
     elseif s:floatwin
-      " bdelete removes the buffer *and* closes the floating window
-      " for the buffer.
-      execute winbufnr(l:label_winid) . 'bdelete'
+      " The buffer is not deleted, which is desired since it's reused above in
+      " s:AddWindowLabels.
+      call nvim_win_close(l:label_winid, 1)
     endif
   endfor
 endfunction
