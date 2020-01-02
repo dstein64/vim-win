@@ -268,7 +268,7 @@ function! s:RemoveWindowLabels(label_winids)
       call nvim_win_close(l:label_winid, 1)
     endif
   endfor
-  call remove(a:label_winids, 0, -1)
+  if len(a:label_winids) > 0 | call remove(a:label_winids, 0, -1) | endif
 endfunction
 
 let s:esc_chars = [
