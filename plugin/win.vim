@@ -318,13 +318,13 @@ function s:GetWindowNr()
     if str2nr(nr2char(l:char)) ># 0
       let l:winnr = nr2char(l:char)
     endif
-  elseif index(s:left_chars) !=# -1
+  elseif index(s:left_chars, l:char) !=# -1
     let l:winnr = winnr('h')
-  elseif index(s:down_chars) !=# -1
+  elseif index(s:down_chars, l:char) !=# -1
     let l:winnr = winnr('j')
-  elseif index(s:up_chars) !=# -1
+  elseif index(s:up_chars, l:char) !=# -1
     let l:winnr = winnr('k')
-  elseif index(s:right_chars) !=# -1
+  elseif index(s:right_chars, l:char) !=# -1
     let l:winnr = winnr('l')
   endif
   return l:winnr
