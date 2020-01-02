@@ -209,9 +209,12 @@ function! s:AddWindowLabels()
   for l:winnr in range(1, l:num_wins)
     if winheight(l:winnr) ==# 0 || winwidth(l:winnr) ==# 0 | continue | endif
     let [l:row, l:col] = win_screenpos(l:winnr)
-    " TODO: zero padded numbers in label
     let l:is_active = l:winnr ==# winnr()
-    let l:label = '[' . l:winnr . (l:is_active ? '*]' : ']')
+    let l:label = '[' . l:winnr
+    if l:winnr ==# winnr()
+      let l:label .= '*'
+    endif
+    let l:label .= ']'
     let l:label = l:label[:winwidth(l:winnr) - 1]
     let l:highlight = l:winnr ==# winnr() ? 'DiffAdd' : 'Todo'
     if s:popupwin
@@ -284,25 +287,20 @@ let s:control_left_chars = [char2nr("\<c-h>"), "\<c-left>"]
 let s:control_down_chars = [char2nr("\<c-j>"), "\<c-down>"]
 let s:control_up_chars = [char2nr("\<c-k>"), "\<c-up>"]
 let s:control_right_chars = [char2nr("\<c-l>"), "\<c-right>"]
-" Don't support <c-c> for closing, since <c-c> is intended for canceling.
-let s:window_close_chars = [char2nr('c')]
-let s:window_swap_chars = [char2nr('s')]
 let s:digit_chars = []
 for s:digit in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
   call add(s:digit_chars, char2nr(s:digit))
 endfor
 let s:help_lines = [
-      \   'win> ?',
-      \   '',
-      \   '* Use the hjkl movement keys to resize the active window.',
-      \   '  Holding <shift> modifies which border shifts.',
+      \   '* Use the hjkl movement keys to change the active window.',
+      \   '* Hold <shift> and use the hjkl movement keys to resize the active window.',
+      \   '  This shifts the right and bottom borders.',
+      \   '* Hold <control> and use the hjkl movement keys to resize the active window.',
+      \   '  This shifts the left and top borders.',
       \   '* Enter a window number to change the active window.',
-      \   '  Window numbers are temporarily shown in status lines.',
       \   '  Where applicable, use leading zero(es) or press <enter> to submit.',
-      \   '* Press w followed by an hjkl movement key to change the active window.',
+      \   '* Press s followed by an hjkl movement key or window number, to swap windows.',
       \   '* Press <esc> to return or go back (where applicable).',
-      \   '',
-      \   '[Press any key to continue]',
       \ ]
 " TODO: Get rid of window selection mode by integrating its functionaliity
 " into the main mode.
@@ -311,7 +309,6 @@ function s:GetWindowNr()
   " TODO: support windows higher than 9 (failing on 0 or numbers out of
   " range).
   " TODO: update the echo message accordingly to show characters.
-  " TODO: support getting more characters...
   let l:winnr = winnr()
   let l:char = s:GetChar()
   if index(s:digit_chars, l:char) != -1
@@ -330,6 +327,17 @@ function s:GetWindowNr()
   return l:winnr
 endfunction
 
+" TODO: update docs
+" Takes a list of lists. Each sublist is comprised of a highlight group name
+" and a corresponding string. Returns a command for echoing.
+function! s:Echo(echo_list)
+  redraw
+  for [l:hlgroup, l:string] in a:echo_list
+    execute 'echohl ' .  l:hlgroup | echon l:string
+  endfor
+  echohl None
+endfunction
+
 function! s:Win()
   let l:prompt = 'win> '
   while 1
@@ -340,12 +348,25 @@ function! s:Win()
     if index(s:esc_chars, l:char) !=# -1
       break
     elseif l:char ==# char2nr('?')
-      redraw | echo join(s:help_lines, "\n")
+      let l:echo_list = []
+      call add(l:echo_list, ['Title', "win.vim help\n"])
+      call add(l:echo_list, ['None', join(s:help_lines, "\n")])
+      call add(l:echo_list, ['Question', "\n[Press any key to continue]"])
+      call s:Echo(l:echo_list)
       call s:GetChar()
-    elseif index(s:window_swap_chars, l:char) !=# -1
+    elseif l:char ==# char2nr('w')
+      wincmd w
+    elseif l:char ==# char2nr('s')
       " TODO: show entered key 
-      let l:swap_win = s:GetWindowNr()
-      call s:Swap(l:swap_win)
+      let l:swap_winnr = s:GetWindowNr()
+      call s:Swap(l:swap_winnr)
+    elseif index(s:digit_chars, l:char) !=# -1
+      redraw
+      try
+        let l:winnr = input(l:prompt, nr2char(l:char))
+        execute l:winnr . 'wincmd w'
+      catch
+      endtry
     elseif index(s:left_chars, l:char) !=# -1
       wincmd h
     elseif index(s:down_chars, l:char) !=# -1
@@ -370,8 +391,6 @@ function! s:Win()
       call s:ResizeTopUp()
     elseif index(s:control_right_chars, l:char) !=# -1
       call s:ResizeLeftRight()
-    else
-      let l:prompt = 'win (press ? for help)> '
     endif
     call s:RemoveWindowLabels(l:label_winids)
   endwhile
