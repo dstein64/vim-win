@@ -308,30 +308,25 @@ let s:help_lines = [
 " into the main mode.
 
 function s:GetWindowNr()
-  " TODO: should you be setting winwidth, winheight, winminwidth, winminheight
-  " temporarily here?
   " TODO: support windows higher than 9 (failing on 0 or numbers out of
   " range).
   " TODO: update the echo message accordingly to show characters.
-  " TODO: support keys like hjkl.
   " TODO: support getting more characters...
-  let l:win_id = win_getid()
+  let l:winnr = winnr()
   let l:char = s:GetChar()
   if index(s:digit_chars, l:char) != -1
     if str2nr(nr2char(l:char)) ># 0
-      silent! execute nr2char(l:char) . 'wincmd w'
+      let l:winnr = nr2char(l:char)
     endif
-  elseif index(s:left_chars + s:shift_left_chars, l:char) !=# -1
-    wincmd h
-  elseif index(s:down_chars + s:shift_down_chars, l:char) !=# -1
-    wincmd j
-  elseif index(s:up_chars + s:shift_up_chars, l:char) !=# -1
-    wincmd k
-  elseif index(s:right_chars + s:shift_right_chars, l:char) !=# -1
-    wincmd l
+  elseif index(s:left_chars) !=# -1
+    let l:winnr = winnr('h')
+  elseif index(s:down_chars) !=# -1
+    let l:winnr = winnr('j')
+  elseif index(s:up_chars) !=# -1
+    let l:winnr = winnr('k')
+  elseif index(s:right_chars) !=# -1
+    let l:winnr = winnr('l')
   endif
-  let l:winnr = winnr()
-  call win_gotoid(l:win_id)
   return l:winnr
 endfunction
 
