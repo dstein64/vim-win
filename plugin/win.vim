@@ -185,10 +185,10 @@ function! s:Swap(winnr)
   let l:view1 = winsaveview()
   execute l:winnr2 . 'wincmd w'
   let l:view2 = winsaveview()
-  execute 'hide ' . l:bufnr1 . 'buffer'
+  execute 'silent hide ' . l:bufnr1 . 'buffer'
   call winrestview(l:view1)
   execute l:winnr1 . 'wincmd w'
-  execute 'hide ' . l:bufnr2 . 'buffer'
+  execute 'silent hide ' . l:bufnr2 . 'buffer'
   call winrestview(l:view2)
   execute l:winnr2 . 'wincmd w'
 endfunction
@@ -219,7 +219,7 @@ function! s:AddWindowLabels()
     let l:highlight = l:winnr ==# winnr() ? 'DiffAdd' : 'Todo'
     if s:popupwin
       " When there are 2 or less columns in a rightmost window, popup text
-      " starts on top of the vertical separator line.
+      " overlaps the vertical separator line.
       if l:col >=# &columns - 1 | continue | endif
       let l:options = {
             \   'highlight': l:highlight,
@@ -302,8 +302,6 @@ let s:help_lines = [
       \   '* Press s followed by an hjkl movement key or window number, to swap windows.',
       \   '* Press <esc> to return or go back (where applicable).',
       \ ]
-" TODO: Get rid of window selection mode by integrating its functionaliity
-" into the main mode.
 
 function s:GetWindowNr()
   " TODO: support windows higher than 9 (failing on 0 or numbers out of
@@ -339,34 +337,35 @@ function! s:Echo(echo_list)
 endfunction
 
 function! s:Win()
-  let l:prompt = 'win> '
+  let l:label_winids = []
   while 1
+    call s:RemoveWindowLabels(l:label_winids)
     let l:label_winids = s:AddWindowLabels()
-    redraw | echo l:prompt
+    let l:prompt_echo_list = [['ModeMsg', 'win.vim'], ['None', '> ']]
+    call s:Echo(l:prompt_echo_list)
     let l:char = s:GetChar()
-    let l:prompt = 'win> '
     if index(s:esc_chars, l:char) !=# -1
       break
     elseif l:char ==# char2nr('?')
-      let l:echo_list = []
-      call add(l:echo_list, ['Title', "win.vim help\n"])
-      call add(l:echo_list, ['None', join(s:help_lines, "\n")])
-      call add(l:echo_list, ['Question', "\n[Press any key to continue]"])
-      call s:Echo(l:echo_list)
+      let l:help_echo_list = []
+      call add(l:help_echo_list, ['Title', "win.vim help\n"])
+      call add(l:help_echo_list, ['None', join(s:help_lines, "\n")])
+      call add(l:help_echo_list, ['Question', "\n[Press any key to continue]"])
+      call s:Echo(l:help_echo_list)
       call s:GetChar()
     elseif l:char ==# char2nr('w')
       wincmd w
     elseif l:char ==# char2nr('s')
-      " TODO: show entered key 
+      call add(l:prompt_echo_list, ['None', 's'])
+      call s:Echo(l:prompt_echo_list)
       let l:swap_winnr = s:GetWindowNr()
       call s:Swap(l:swap_winnr)
-    elseif index(s:digit_chars, l:char) !=# -1
-      redraw
-      try
-        let l:winnr = input(l:prompt, nr2char(l:char))
-        execute l:winnr . 'wincmd w'
-      catch
-      endtry
+    elseif l:char != char2nr('0') && index(s:digit_chars, l:char) !=# -1
+      continue
+      while 1
+        call add(l:prompt_echo_list, ['None', nr2char(l:char)])
+        call s:Echo(l:prompt_echo_list)
+      endwhile
     elseif index(s:left_chars, l:char) !=# -1
       wincmd h
     elseif index(s:down_chars, l:char) !=# -1
@@ -392,7 +391,6 @@ function! s:Win()
     elseif index(s:control_right_chars, l:char) !=# -1
       call s:ResizeLeftRight()
     endif
-    call s:RemoveWindowLabels(l:label_winids)
   endwhile
   call s:RemoveWindowLabels(l:label_winids)
   redraw | echo ''
