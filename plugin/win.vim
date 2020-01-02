@@ -271,24 +271,22 @@ endfunction
 let s:esc_chars = [
       \    char2nr("\<esc>"),
       \    char2nr('q'),
-      \    char2nr('Q'),
-      \    char2nr("\<c-d>"),
       \ ]
-let s:left_chars = [char2nr('h'), "\<left>", "\<bs>"]
+let s:left_chars = [char2nr('h'), "\<left>"]
 let s:down_chars = [char2nr('j'), "\<down>"]
 let s:up_chars = [char2nr('k'), "\<up>"]
-let s:right_chars = [char2nr('l'), "\<right>", char2nr(' ')]
-let s:shift_left_chars = [char2nr('H'), "\<s-left>", "\<s-bs>"]
+let s:right_chars = [char2nr('l'), "\<right>"]
+let s:shift_left_chars = [char2nr('H'), "\<s-left>"]
 let s:shift_down_chars = [char2nr('J'), "\<s-down>"]
 let s:shift_up_chars = [char2nr('K'), "\<s-up>"]
-let s:shift_right_chars = [char2nr('L'), "\<s-right>", "\<s-space>"]
+let s:shift_right_chars = [char2nr('L'), "\<s-right>"]
+let s:control_left_chars = [char2nr("\<c-h>"), "\<c-left>"]
+let s:control_down_chars = [char2nr("\<c-j>"), "\<c-down>"]
+let s:control_up_chars = [char2nr("\<c-k>"), "\<c-up>"]
+let s:control_right_chars = [char2nr("\<c-l>"), "\<c-right>"]
 " Don't support <c-c> for closing, since <c-c> is intended for canceling.
-" Closing functionality is not currently implemented. It would require
-" keeping track of window IDs instead of window numbers (since closing windows
-" changes window numbers).
-let s:window_close_chars = [char2nr('c'), char2nr('C')]
-let s:window_swap_chars = [char2nr('s'), char2nr('S'), char2nr("\<c-s>")]
-let s:window_selection_chars = [char2nr('w'), char2nr('W'), char2nr("\<c-w>")]
+let s:window_close_chars = [char2nr('c')]
+let s:window_swap_chars = [char2nr('s')]
 let s:digit_chars = []
 for s:digit in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
   call add(s:digit_chars, char2nr(s:digit))
@@ -310,6 +308,8 @@ let s:help_lines = [
 " into the main mode.
 
 function s:GetWindowNr()
+  " TODO: should you be setting winwidth, winheight, winminwidth, winminheight
+  " temporarily here?
   " TODO: support windows higher than 9 (failing on 0 or numbers out of
   " range).
   " TODO: update the echo message accordingly to show characters.
@@ -348,28 +348,32 @@ function! s:Win()
       redraw | echo join(s:help_lines, "\n")
       call s:GetChar()
     elseif index(s:window_swap_chars, l:char) !=# -1
+      " TODO: show entered key 
       let l:swap_win = s:GetWindowNr()
       call s:Swap(l:swap_win)
-    elseif index(s:window_selection_chars, l:char) !=# -1
-      " TODO have to properly show key entered
-      redraw | echo 'win> w'
-      let l:target = s:GetWindowNr()
-      execute l:target . 'wincmd w'
     elseif index(s:left_chars, l:char) !=# -1
-      call s:ResizeRightLeft()
+      wincmd h
     elseif index(s:down_chars, l:char) !=# -1
-      call s:ResizeBottomDown()
+      wincmd j
     elseif index(s:up_chars, l:char) !=# -1
-      call s:ResizeBottomUp()
+      wincmd k
     elseif index(s:right_chars, l:char) !=# -1
-      call s:ResizeRightRight()
+      wincmd l
     elseif index(s:shift_left_chars, l:char) !=# -1
-      call s:ResizeLeftLeft()
+      call s:ResizeRightLeft()
     elseif index(s:shift_down_chars, l:char) !=# -1
-      call s:ResizeTopDown()
+      call s:ResizeBottomDown()
     elseif index(s:shift_up_chars, l:char) !=# -1
-      call s:ResizeTopUp()
+      call s:ResizeBottomUp()
     elseif index(s:shift_right_chars, l:char) !=# -1
+      call s:ResizeRightRight()
+    elseif index(s:control_left_chars, l:char) !=# -1
+      call s:ResizeLeftLeft()
+    elseif index(s:control_down_chars, l:char) !=# -1
+      call s:ResizeTopDown()
+    elseif index(s:control_up_chars, l:char) !=# -1
+      call s:ResizeTopUp()
+    elseif index(s:control_right_chars, l:char) !=# -1
       call s:ResizeLeftRight()
     else
       let l:prompt = 'win (press ? for help)> '
