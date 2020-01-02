@@ -199,6 +199,9 @@ function! s:GetChar()
   catch
     let l:char = char2nr("\<esc>")
   endtry
+  if type(l:char) ==# v:t_number
+    let l:char = nr2char(l:char)
+  endif
   return l:char
 endfunction
 
@@ -271,26 +274,20 @@ function! s:RemoveWindowLabels(label_winids)
   if len(a:label_winids) > 0 | call remove(a:label_winids, 0, -1) | endif
 endfunction
 
-let s:esc_chars = [
-      \    char2nr("\<esc>"),
-      \    char2nr('q'),
-      \ ]
-let s:left_chars = [char2nr('h'), "\<left>"]
-let s:down_chars = [char2nr('j'), "\<down>"]
-let s:up_chars = [char2nr('k'), "\<up>"]
-let s:right_chars = [char2nr('l'), "\<right>"]
-let s:shift_left_chars = [char2nr('H'), "\<s-left>"]
-let s:shift_down_chars = [char2nr('J'), "\<s-down>"]
-let s:shift_up_chars = [char2nr('K'), "\<s-up>"]
-let s:shift_right_chars = [char2nr('L'), "\<s-right>"]
-let s:control_left_chars = [char2nr("\<c-h>"), "\<c-left>"]
-let s:control_down_chars = [char2nr("\<c-j>"), "\<c-down>"]
-let s:control_up_chars = [char2nr("\<c-k>"), "\<c-up>"]
-let s:control_right_chars = [char2nr("\<c-l>"), "\<c-right>"]
-let s:digit_chars = []
-for s:digit in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-  call add(s:digit_chars, char2nr(s:digit))
-endfor
+let s:esc_chars = ["\<esc>", 'q']
+let s:left_chars = ['h', "\<left>"]
+let s:down_chars = ['j', "\<down>"]
+let s:up_chars = ['k', "\<up>"]
+let s:right_chars = ['l', "\<right>"]
+let s:shift_left_chars = ['H', "\<s-left>"]
+let s:shift_down_chars = ['J', "\<s-down>"]
+let s:shift_up_chars = ['K', "\<s-up>"]
+let s:shift_right_chars = ['L', "\<s-right>"]
+let s:control_left_chars = ["\<c-h>", "\<c-left>"]
+let s:control_down_chars = ["\<c-j>", "\<c-down>"]
+let s:control_up_chars = ["\<c-k>", "\<c-up>"]
+let s:control_right_chars = ["\<c-l>", "\<c-right>"]
+let s:digit_chars = split('0123456789', '\zs')
 let s:help_lines = [
       \   '* Use the hjkl movement keys to change the active window.',
       \   '* Hold <shift> and use the hjkl movement keys to resize the active window.',
@@ -309,10 +306,8 @@ function s:GetWindowNr()
   " TODO: update the echo message accordingly to show characters.
   let l:winnr = winnr()
   let l:char = s:GetChar()
-  if index(s:digit_chars, l:char) != -1
-    if str2nr(nr2char(l:char)) ># 0
-      let l:winnr = nr2char(l:char)
-    endif
+  if l:char !=# '0' && index(s:digit_chars, l:char) != -1
+    let l:winnr = str2nr(l:char)
   elseif index(s:left_chars, l:char) !=# -1
     let l:winnr = winnr('h')
   elseif index(s:down_chars, l:char) !=# -1
@@ -346,21 +341,21 @@ function! s:Win()
     let l:char = s:GetChar()
     if index(s:esc_chars, l:char) !=# -1
       break
-    elseif l:char ==# char2nr('?')
+    elseif l:char ==# '?'
       let l:help_echo_list = []
       call add(l:help_echo_list, ['Title', "win.vim help\n"])
       call add(l:help_echo_list, ['None', join(s:help_lines, "\n")])
       call add(l:help_echo_list, ['Question', "\n[Press any key to continue]"])
       call s:Echo(l:help_echo_list)
       call s:GetChar()
-    elseif l:char ==# char2nr('w')
+    elseif l:char ==# 'w'
       wincmd w
-    elseif l:char ==# char2nr('s')
+    elseif l:char ==# 's'
       call add(l:prompt_echo_list, ['None', 's'])
       call s:Echo(l:prompt_echo_list)
       let l:swap_winnr = s:GetWindowNr()
       call s:Swap(l:swap_winnr)
-    elseif l:char != char2nr('0') && index(s:digit_chars, l:char) !=# -1
+    elseif l:char != '0' && index(s:digit_chars, l:char) !=# -1
       continue
       while 1
         call add(l:prompt_echo_list, ['None', nr2char(l:char)])
