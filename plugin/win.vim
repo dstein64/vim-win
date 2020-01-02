@@ -1,10 +1,7 @@
 " TODO: handle range/count (visual selection)?
 " TODO: autoload
-" TODO: show active window with (*) after number. will require more calls to
-" LabelWindows (and possibly the revert function).
-" TODO: include buffer name in your window label
 
-" Set g:force_reload_win = 1 to force load.
+" Set g:force_load_win = 1 to force load.
 if !get(g:, 'force_load_win', 0) && exists('g:loaded_win')
   finish
 endif
@@ -16,7 +13,7 @@ set cpo&vim
 if !hasmapto('<Plug>WinWin')
   map <leader>w <Plug>WinWin
 endif
-noremap <script> <Plug>WinWin <SID>Win 
+noremap <silent> <script> <Plug>WinWin <SID>Win
 noremap <SID>Win :<c-u>call <SID>Win()<cr>
 
 if !exists(':Win')
@@ -25,6 +22,9 @@ endif
 
 let g:win_resize_height = 2
 let g:win_resize_width = 2
+
+let s:popupwin = has('popupwin')
+let s:floatwin = exists('*nvim_open_win') && exists('*nvim_win_close')
 
 " Set 'winwidth' and 'winheight' and return existing values in List.
 function! s:SetWinWidthWinHeight(winwidth, winheight)
@@ -199,30 +199,57 @@ function! s:GetChar()
   return l:char
 endfunction
 
-" Label windows with winnr and return existing status lines.
-function! s:LabelWindows()
-  let l:win_id = win_getid()
+" Label windows with winnr and return winids of the labels.
+function! s:AddWindowLabels()
+  let l:label_winids = []
   let l:num_wins = winnr('$')
-  let l:status_lines = {}
   for l:winnr in range(1, l:num_wins)
-    execute l:winnr . 'wincmd w'
-    let l:status_lines[l:winnr] = &l:statusline
-    " TODO: zero padded numbers on status line
-    let l:status_line = '[win]\ ' . l:winnr
-    execute 'setlocal statusline=' . l:status_line
+    if winheight(l:winnr) ==# 0 || winwidth(l:winnr) ==# 0 | continue | endif
+    let [l:row, l:col] = win_screenpos(l:winnr)
+    " TODO: zero padded numbers in label
+    let l:is_active = l:winnr ==# winnr()
+    let l:label = '[' . l:winnr . (l:is_active ? '*]' : ']')
+    let l:label = l:label[:winwidth(l:winnr) - 1]
+    " TODO: bold for active window.
+    if s:popupwin
+      " When there are 2 or less columns in a rightmost window, popup text
+      " starts on top of the vertical separator line.
+      if l:col >=# &columns - 1 | continue | endif
+      let l:options = {
+            \   'line': l:row,
+            \   'col': l:col,
+            \ }
+      let l:label_winid = popup_create(l:label, l:options)
+      call add(l:label_winids, l:label_winid)
+    elseif s:floatwin
+      let l:buf = nvim_create_buf(0, 1)
+      call nvim_buf_set_lines(l:buf, 0, -1, 1, [l:label])
+      let l:options = {
+            \   'relative': 'win',
+            \   'style': 'minimal',
+            \   'win': win_getid(l:winnr),
+            \   'height': 1,
+            \   'width': len(l:label),
+            \   'row': 0,
+            \   'col': 0
+            \ }
+      let l:label_winid =  nvim_open_win(l:buf, 0, l:options)
+      call add(l:label_winids, l:label_winid)
+    endif
   endfor
-  call win_gotoid(l:win_id)
-  return l:status_lines
+  return l:label_winids
 endfunction
 
-" Revert s:LabelWindows, using existing status lines.
-function! s:RevertLabelWindows(status_lines)
-  let l:win_id = win_getid()
-  for l:winnr in keys(a:status_lines)
-    execute l:winnr . 'wincmd w'
-    let &l:statusline = a:status_lines[l:winnr]
+function! s:RemoveWindowLabels(label_winids)
+  for l:label_winid in a:label_winids
+    if s:popupwin
+      call popup_close(l:label_winid)
+    elseif s:floatwin
+      " bdelete removes the buffer *and* closes the floating window
+      " for the buffer.
+      execute winbufnr(l:label_winid) . 'bdelete'
+    endif
   endfor
-  call win_gotoid(l:win_id)
 endfunction
 
 let s:esc_chars = [
@@ -251,7 +278,7 @@ for s:digit in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
   call add(s:digit_chars, char2nr(s:digit))
 endfor
 let s:help_lines = [
-      \   '[win] ?',
+      \   'win> ?',
       \   '',
       \   '* Use the hjkl movement keys to resize the active window.',
       \   '  Holding <shift> modifies which border shifts.',
@@ -293,12 +320,12 @@ function s:GetWindowNr()
 endfunction
 
 function! s:Win()
-  let l:prompt = '[win] '
-  let status_lines = s:LabelWindows()
+  let l:prompt = 'win> '
   while 1
+    let l:label_winids = s:AddWindowLabels()
     redraw | echo l:prompt
     let l:char = s:GetChar()
-    let l:prompt = '[win] '
+    let l:prompt = 'win> '
     if index(s:esc_chars, l:char) !=# -1
       break
     elseif l:char ==# char2nr('?')
@@ -306,11 +333,10 @@ function! s:Win()
       call s:GetChar()
     elseif index(s:window_swap_chars, l:char) !=# -1
       let l:swap_win = s:GetWindowNr()
-      call s:RevertLabelWindows(l:status_lines)
       call s:Swap(l:swap_win)
-      let status_lines = s:LabelWindows()
     elseif index(s:window_selection_chars, l:char) !=# -1
-      redraw | echo '[win] (window selection mode)'
+      " have to properly show key entered
+      redraw | echo 'win> w'
       let l:target = s:GetWindowNr()
       execute l:target . 'wincmd w'
     elseif index(s:left_chars, l:char) !=# -1
@@ -330,10 +356,12 @@ function! s:Win()
     elseif index(s:shift_right_chars, l:char) !=# -1
       call s:ResizeLeftRight()
     else
-      let l:prompt = '[win] (press ? for help) '
+      let l:prompt = 'win (press ? for help)> '
     endif
+    call s:RemoveWindowLabels(l:label_winids)
+    let l:label_winids = []
   endwhile
-  call s:RevertLabelWindows(l:status_lines)
+  call s:RemoveWindowLabels(l:label_winids)
   redraw | echo ''
 endfunction
 
