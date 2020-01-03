@@ -29,6 +29,7 @@ let s:popupwin = has('popupwin')
 let s:floatwin = exists('*nvim_open_win') && exists('*nvim_win_close')
 
 let s:code0 = char2nr('0')
+let s:code1 = char2nr('1')
 let s:code9 = char2nr('9')
 let s:esc_chars = ["\<esc>", 'q']
 let s:left_chars = ['h', "\<left>"]
@@ -43,7 +44,6 @@ let s:control_left_chars = ["\<c-h>", "\<c-left>"]
 let s:control_down_chars = ["\<c-j>", "\<c-down>"]
 let s:control_up_chars = ["\<c-k>", "\<c-up>"]
 let s:control_right_chars = ["\<c-l>", "\<c-right>"]
-let s:digit_chars = split('0123456789', '\zs')
 "
 " Set 'winwidth' and 'winheight' and return existing values in List.
 function! s:SetWinWidthWinHeight(winwidth, winheight)
@@ -271,7 +271,7 @@ function! s:AddWindowLabels()
       if !has_key(s:, 'floatwin_bufnrs')
         let s:floatwin_bufnrs = []
       endif
-      if l:winnr > len(s:floatwin_bufnrs)
+      if l:winnr ># len(s:floatwin_bufnrs)
         call add(s:floatwin_bufnrs, nvim_create_buf(0, 1))
       endif
       let l:buf = s:floatwin_bufnrs[l:winnr - 1]
@@ -305,36 +305,7 @@ function! s:RemoveWindowLabels(label_winids)
       call nvim_win_close(l:label_winid, 1)
     endif
   endfor
-  if len(a:label_winids) > 0 | call remove(a:label_winids, 0, -1) | endif
-endfunction
-
-" Creates a prefix tree corresponding to window numbers. This is similar to a
-" trie, but there are no values associated with keys, and every node in the
-" tree is a key, given the consecutive ordering of window numbers starting at
-" one.
-function! s:CreateWinnrPrefixTree(win_count)
-  let l:prefix_tree = {}
-  for l:winnr in range(1, a:win_count)
-    let l:ref = l:prefix_tree
-    for l:digit in split(string(l:winnr), '\zs')
-      if !has_key(l:ref, l:digit)
-        let l:ref[l:digit] = {}
-      endif
-      let l:ref = l:ref[l:digit]
-    endfor
-  endfor
-  return l:prefix_tree
-endfunction
-
-function! s:IsPrefixTreeLeaf(prefix_tree, string)
-  let l:ref = a:prefix_tree
-  for l:char in a:string
-    if !has_key(l:ref, l:char)
-      return 0
-    endif
-    let l:ref = l:ref[l:char]
-  endfor
-  return len(l:ref) ==# 0
+  if len(a:label_winids) ># 0 | call remove(a:label_winids, 0, -1) | endif
 endfunction
 
 " Scans user input for a window number. The first argument specifies the
@@ -344,22 +315,19 @@ function s:ScanWinnrDigits(echo_list, ...)
   let l:digits = get(a:, 1, [])[:]
   for l:digit in l:digits
     let l:code = char2nr(l:digit)
-    if l:code < s:code0 || l:code > s:code9 | return 0 | endif
+    if l:code <# s:code0 || l:code ># s:code9 | return 0 | endif
   endfor
   let l:win_count = s:WindowCount()
   while 1
-    if len(l:digits) > 0
+    if len(l:digits) ># 0
       if l:digits[0] ==# '0' | return 0 | endif
       if l:digits[-1] ==# "\<cr>"
         call remove(l:digits, -1)
         break
       endif
       let l:code = char2nr(l:digits[-1])
-      if l:code < s:code0 || l:code > s:code9 | return 0 | endif
-      if !has_key(l:, 'prefix_tree')
-        let l:prefix_tree = s:CreateWinnrPrefixTree(l:win_count)
-      endif
-      if s:IsPrefixTreeLeaf(l:prefix_tree, l:digits)
+      if l:code <# s:code0 || l:code ># s:code9 | return 0 | endif
+      if str2nr(join(l:digits + ['0'], '')) ># l:win_count
         break
       endif
       if len(l:digits) ==# len(string(l:win_count))
@@ -371,7 +339,7 @@ function s:ScanWinnrDigits(echo_list, ...)
     call add(l:digits, s:GetChar())
   endwhile
   let l:winnr = str2nr(join(l:digits, ''))
-  return l:winnr <= l:win_count ? l:winnr : 0
+  return l:winnr <=# l:win_count ? l:winnr : 0
 endfunction
 
 " Scans user input for a window number or movement, returning the target. The
@@ -380,8 +348,8 @@ function s:ScanWinnr(echo_list)
   let l:winnr = 0
   call s:Echo(a:echo_list)
   let l:char = s:GetChar()
-  " TODO: check for 1-9 same way as above
-  if l:char !=# '0' && index(s:digit_chars, l:char) != -1
+  let l:code = char2nr(l:char)
+  if l:code >=# s:code1 && l:code <=# s:code9
     let l:winnr = s:ScanWinnrDigits(a:echo_list, [l:char])
   elseif index(s:left_chars, l:char) !=# -1
     let l:winnr = winnr('h')
@@ -449,7 +417,7 @@ function! s:Win()
       let l:swap_prompt = l:prompt + [['None', 's']]
       let l:swap_winnr = s:ScanWinnr(l:swap_prompt)
       if l:swap_winnr !=# 0 | call s:Swap(l:swap_winnr) | endif
-    elseif code >= char2nr('1') && code <= char2nr('9')
+    elseif l:code >=# s:code1 && l:code <=# s:code9
       let l:winnr = s:ScanWinnrDigits(l:prompt, [l:char])
       if l:winnr != 0 | silent! execute l:winnr . 'wincmd w' | endif
     elseif index(s:left_chars, l:char) !=# -1
