@@ -27,16 +27,25 @@ let g:win_resize_width = 2
 
 " g:win_ext_command_map allows additional commands to be added to win.vim. It
 " maps command keys to command strings. These will override the built-in
-" vim-win commands that use the same keys, except for <esc> and q, which are
-" used for exiting.
+" vim-win commands that use the same keys, except for 1) <esc>, which is used
+" for exiting, and 2) ?, which is used for help.
 " E.g., let g:win_ext_command_map = {
 "             \   'c': 'wincmd c',
-"             \   "\<c-v>": 'wincmd v',
-"             \   "\<c-s>": 'wincmd s',
+"             \   'C': 'close!',
+"             \   'q': 'quit',
+"             \   'Q': 'quit!',
+"             \   '!': 'qall!',
+"             \   'V': 'wincmd v',
+"             \   'S': 'wincmd s',
 "             \   'n': 'bnext',
+"             \   'N': 'bnext!',
 "             \   'p': 'bprevious',
+"             \   'P': 'bprevious!',
+"             \   "\<c-n>": 'tabnext',
+"             \   "\<c-p>": 'tabprevious',
 "             \   '=': 'wincmd =',
 "             \   'w': 'write',
+"             \   't': 'tabnew',
 "             \ }
 let g:win_ext_command_map = get(g:, 'win_ext_command_map', {})
 
@@ -52,7 +61,7 @@ let s:floatwin = exists('*nvim_open_win') && exists('*nvim_win_close')
 let s:code0 = char2nr('0')
 let s:code1 = char2nr('1')
 let s:code9 = char2nr('9')
-let s:esc_chars = ["\<esc>", 'q']
+let s:esc_chars = ["\<esc>"]
 let s:left_chars = ['h', "\<left>"]
 let s:down_chars = ['j', "\<down>"]
 let s:up_chars = ['k', "\<up>"]
@@ -234,6 +243,7 @@ function! s:GetChar()
   try
     let l:char = getchar()
   catch
+    " E.g., <c-c>
     let l:char = char2nr("\<esc>")
   endtry
   if type(l:char) ==# v:t_number
@@ -331,7 +341,7 @@ function! s:RemoveWindowLabels(label_winids)
     if s:popupwin
       call popup_close(l:label_winid)
     elseif s:floatwin
-      " The buffer is not deleted, which is desired since it's reused above in
+      " The buffer is not deleted, which is intended since it's reused above in
       " s:AddWindowLabels.
       call nvim_win_close(l:label_winid, 1)
     endif
@@ -450,10 +460,10 @@ function! s:Win()
       let l:code = char2nr(l:char)
       if index(s:esc_chars, l:char) !=# -1
         break
-      elseif has_key(g:win_ext_command_map, l:char)
-        execute g:win_ext_command_map[l:char]
       elseif l:char ==# '?'
         call s:ShowHelp()
+      elseif has_key(g:win_ext_command_map, l:char)
+        execute g:win_ext_command_map[l:char]
       elseif l:char ==# 'w'
         wincmd w
       elseif l:char ==# 's'
