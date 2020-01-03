@@ -324,6 +324,17 @@ function! s:RemoveWindowLabels(label_winids)
   if len(a:label_winids) ># 0 | call remove(a:label_winids, 0, -1) | endif
 endfunction
 
+" Takes a list of lists. Each sublist is comprised of a highlight group name
+" and a corresponding string to echo.
+function! s:Echo(echo_list)
+  redraw
+  for [l:hlgroup, l:string] in a:echo_list
+    execute 'echohl ' .  l:hlgroup | echon l:string
+  endfor
+  echohl None
+endfunction
+
+
 " Scans user input for a window number. The first argument specifies the
 " initial output (see the documentation for s:Echo), and the optional second
 " argument specifies digits that have already been accumulated.
@@ -379,16 +390,6 @@ function s:ScanWinnr(echo_list)
   return l:winnr
 endfunction
 
-" Takes a list of lists. Each sublist is comprised of a highlight group name
-" and a corresponding string to echo.
-function! s:Echo(echo_list)
-  redraw
-  for [l:hlgroup, l:string] in a:echo_list
-    execute 'echohl ' .  l:hlgroup | echon l:string
-  endfor
-  echohl None
-endfunction
-
 function! s:ShowHelp()
   let l:help_lines = [
         \   '* Use the hjkl movement keys to change the active window.',
@@ -401,11 +402,20 @@ function! s:ShowHelp()
         \   '* Press s followed by an hjkl movement key or window number, to swap windows.',
         \   '* Press <esc> to leave vim-win or go back (where applicable).',
         \ ]
-  let l:help_echo = []
-  call add(l:help_echo, ['Title', "vim-win help\n"])
-  call add(l:help_echo, ['None', join(l:help_lines, "\n")])
-  call add(l:help_echo, ['Question', "\n[Press any key to return]"])
-  call s:Echo(l:help_echo)
+  let l:echo_list = []
+  call add(l:echo_list, ['Title', "vim-win help\n"])
+  call add(l:echo_list, ['None', join(l:help_lines, "\n")])
+  call add(l:echo_list, ['Question', "\n[Press any key to return]"])
+  call s:Echo(l:echo_list)
+  call s:GetChar()
+endfunction
+
+function! s:ShowError(message)
+  let l:echo_list = []
+  call add(l:echo_list, ['Title', "vim-win error\n"])
+  call add(l:echo_list, ['Error', a:message])
+  call add(l:echo_list, ['Question', "\n[Press any key to return]"])
+  call s:Echo(l:echo_list)
   call s:GetChar()
 endfunction
 
@@ -418,49 +428,53 @@ function! s:Win()
         \   ['None', '> ']
         \ ]
   while 1
-    call s:RemoveWindowLabels(l:label_winids)
-    let l:label_winids = s:AddWindowLabels()
-    call s:Echo(l:prompt)
-    let l:char = s:GetChar()
-    let l:code = char2nr(l:char)
-    if index(s:esc_chars, l:char) !=# -1
-      break
-    elseif l:char ==# '?'
-      call s:ShowHelp()
-    elseif l:char ==# 'w'
-      wincmd w
-    elseif l:char ==# 's'
-      let l:swap_prompt = l:prompt + [['None', 's']]
-      let l:swap_winnr = s:ScanWinnr(l:swap_prompt)
-      if l:swap_winnr !=# 0 | call s:Swap(l:swap_winnr) | endif
-    elseif l:code >=# s:code1 && l:code <=# s:code9
-      let l:winnr = s:ScanWinnrDigits(l:prompt, [l:char])
-      if l:winnr !=# 0 | silent! execute l:winnr . 'wincmd w' | endif
-    elseif index(s:left_chars, l:char) !=# -1
-      wincmd h
-    elseif index(s:down_chars, l:char) !=# -1
-      wincmd j
-    elseif index(s:up_chars, l:char) !=# -1
-      wincmd k
-    elseif index(s:right_chars, l:char) !=# -1
-      wincmd l
-    elseif index(s:shift_left_chars, l:char) !=# -1
-      call s:ResizeRightLeft()
-    elseif index(s:shift_down_chars, l:char) !=# -1
-      call s:ResizeBottomDown()
-    elseif index(s:shift_up_chars, l:char) !=# -1
-      call s:ResizeBottomUp()
-    elseif index(s:shift_right_chars, l:char) !=# -1
-      call s:ResizeRightRight()
-    elseif index(s:control_left_chars, l:char) !=# -1
-      call s:ResizeLeftLeft()
-    elseif index(s:control_down_chars, l:char) !=# -1
-      call s:ResizeTopDown()
-    elseif index(s:control_up_chars, l:char) !=# -1
-      call s:ResizeTopUp()
-    elseif index(s:control_right_chars, l:char) !=# -1
-      call s:ResizeLeftRight()
-    endif
+    try
+      call s:RemoveWindowLabels(l:label_winids)
+      let l:label_winids = s:AddWindowLabels()
+      call s:Echo(l:prompt)
+      let l:char = s:GetChar()
+      let l:code = char2nr(l:char)
+      if index(s:esc_chars, l:char) !=# -1
+        break
+      elseif l:char ==# '?'
+        call s:ShowHelp()
+      elseif l:char ==# 'w'
+        wincmd w
+      elseif l:char ==# 's'
+        let l:swap_prompt = l:prompt + [['None', 's']]
+        let l:swap_winnr = s:ScanWinnr(l:swap_prompt)
+        if l:swap_winnr !=# 0 | call s:Swap(l:swap_winnr) | endif
+      elseif l:code >=# s:code1 && l:code <=# s:code9
+        let l:winnr = s:ScanWinnrDigits(l:prompt, [l:char])
+        if l:winnr !=# 0 | silent! execute l:winnr . 'wincmd w' | endif
+      elseif index(s:left_chars, l:char) !=# -1
+        wincmd h
+      elseif index(s:down_chars, l:char) !=# -1
+        wincmd j
+      elseif index(s:up_chars, l:char) !=# -1
+        wincmd k
+      elseif index(s:right_chars, l:char) !=# -1
+        wincmd l
+      elseif index(s:shift_left_chars, l:char) !=# -1
+        call s:ResizeRightLeft()
+      elseif index(s:shift_down_chars, l:char) !=# -1
+        call s:ResizeBottomDown()
+      elseif index(s:shift_up_chars, l:char) !=# -1
+        call s:ResizeBottomUp()
+      elseif index(s:shift_right_chars, l:char) !=# -1
+        call s:ResizeRightRight()
+      elseif index(s:control_left_chars, l:char) !=# -1
+        call s:ResizeLeftLeft()
+      elseif index(s:control_down_chars, l:char) !=# -1
+        call s:ResizeTopDown()
+      elseif index(s:control_up_chars, l:char) !=# -1
+        call s:ResizeTopUp()
+      elseif index(s:control_right_chars, l:char) !=# -1
+        call s:ResizeLeftRight()
+      endif
+    catch
+      call s:ShowError(v:exception)
+    endtry
   endwhile
   call s:RemoveWindowLabels(l:label_winids)
   redraw | echo ''
