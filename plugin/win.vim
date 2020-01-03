@@ -25,6 +25,12 @@ endif
 let g:win_resize_height = 2
 let g:win_resize_width = 2
 
+highlight default link WinActive DiffAdd
+highlight default link WinInactive Todo
+highlight default link WinNeighbor Todo
+highlight default link WinStar StatusLine
+highlight default link WinPrompt ModeMsg
+
 let s:popupwin = has('popupwin')
 let s:floatwin = exists('*nvim_open_win') && exists('*nvim_win_close')
 
@@ -253,7 +259,15 @@ function! s:AddWindowLabels()
     endif
     let l:label .= ']'
     let l:label = l:label[:winwidth(l:winnr) - 1]
-    let l:highlight = l:winnr ==# winnr() ? 'DiffAdd' : 'Todo'
+    let l:highlight = 'WinInactive'
+    for l:motion in ['h', 'j', 'k', 'l']
+      if l:winnr ==# winnr(l:motion)
+        let l:highlight = 'WinNeighbor'
+      endif
+    endfor
+    if l:winnr ==# winnr()
+      let l:highlight = 'WinActive'
+    endif
     if s:popupwin
       " When there are 2 or less columns in a rightmost window, popup text
       " overlaps the vertical separator line.
@@ -396,9 +410,9 @@ endfunction
 function! s:Win()
   let l:label_winids = []
   let l:prompt = [
-        \   ['StatusLine', '*'],
+        \   ['WinStar', '*'],
         \   ['None', ' '],
-        \   ['ModeMsg', 'win.vim'],
+        \   ['WinPrompt', 'win.vim'],
         \   ['None', '> ']
         \ ]
   while 1
@@ -419,7 +433,7 @@ function! s:Win()
       if l:swap_winnr !=# 0 | call s:Swap(l:swap_winnr) | endif
     elseif l:code >=# s:code1 && l:code <=# s:code9
       let l:winnr = s:ScanWinnrDigits(l:prompt, [l:char])
-      if l:winnr != 0 | silent! execute l:winnr . 'wincmd w' | endif
+      if l:winnr !=# 0 | silent! execute l:winnr . 'wincmd w' | endif
     elseif index(s:left_chars, l:char) !=# -1
       wincmd h
     elseif index(s:down_chars, l:char) !=# -1
