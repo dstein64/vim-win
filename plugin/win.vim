@@ -234,7 +234,9 @@ endfunction
 " bottom-right", which does not ensure this, but checks revealed that floating
 " windows are numbered higher than ordinary windows, regardless of position.
 function! s:WindowCount()
-  if !has('nvim') | return winnr('$') | endif
+  if !has('nvim') || !exists('*nvim_win_get_config')
+    return winnr('$')
+  endif
   let l:win_count = 0
   for l:winid in range(1, winnr('$'))
     let l:config = nvim_win_get_config(win_getid(l:winid))
