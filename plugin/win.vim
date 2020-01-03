@@ -30,26 +30,33 @@ let g:win_resize_width = 2
 " vim-win commands that use the same keys, except for 1) <esc>, which is used
 " for exiting, and 2) ?, which is used for help.
 " E.g.,
-" let g:win_ext_command_map = {
-"       \   'c': 'wincmd c',
-"       \   'C': 'close!',
-"       \   'q': 'quit',
-"       \   'Q': 'quit!',
-"       \   '!': 'qall!',
-"       \   'V': 'wincmd v',
-"       \   'S': 'wincmd s',
-"       \   'n': 'bnext',
-"       \   'N': 'bnext!',
-"       \   'p': 'bprevious',
-"       \   'P': 'bprevious!',
-"       \   "\<c-n>": 'tabnext',
-"       \   "\<c-p>": 'tabprevious',
-"       \   '=': 'wincmd =',
-"       \   'w': 'write',
-"       \   't': 'tabnew',
-"       \ }
+" :let g:win_ext_command_map = {
+"        \   'c': 'wincmd c',
+"        \   'C': 'close!',
+"        \   'q': 'quit',
+"        \   'Q': 'quit!',
+"        \   '!': 'qall!',
+"        \   'V': 'wincmd v',
+"        \   'S': 'wincmd s',
+"        \   'n': 'bnext',
+"        \   'N': 'bnext!',
+"        \   'p': 'bprevious',
+"        \   'P': 'bprevious!',
+"        \   "\<c-n>": 'tabnext',
+"        \   "\<c-p>": 'tabprevious',
+"        \   '=': 'wincmd =',
+"        \   'w': 'write',
+"        \   't': 'tabnew',
+"        \ }
 let g:win_ext_command_map = get(g:, 'win_ext_command_map', {})
 
+" The default highlight groups (for colors) are specified below.
+" Change these default colors by defining or linking the corresponding
+" highlight group.
+" E.g., the following will use the Error highlight for the active window.
+" :highlight link WinActive Error
+" E.g., the following will use custom highlight colors for the inactive windows.
+" :highlight WinInactive term=bold ctermfg=12 ctermbg=159 guifg=Blue guibg=LightCyan
 highlight default link WinActive DiffAdd
 highlight default link WinInactive Todo
 highlight default link WinNeighbor Todo
