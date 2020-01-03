@@ -334,7 +334,6 @@ function! s:Echo(echo_list)
   echohl None
 endfunction
 
-
 " Scans user input for a window number. The first argument specifies the
 " initial output (see the documentation for s:Echo), and the optional second
 " argument specifies digits that have already been accumulated.
