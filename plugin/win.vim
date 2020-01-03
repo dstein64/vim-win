@@ -29,24 +29,25 @@ let g:win_resize_width = 2
 " maps command keys to command strings. These will override the built-in
 " vim-win commands that use the same keys, except for 1) <esc>, which is used
 " for exiting, and 2) ?, which is used for help.
-" E.g., let g:win_ext_command_map = {
-"             \   'c': 'wincmd c',
-"             \   'C': 'close!',
-"             \   'q': 'quit',
-"             \   'Q': 'quit!',
-"             \   '!': 'qall!',
-"             \   'V': 'wincmd v',
-"             \   'S': 'wincmd s',
-"             \   'n': 'bnext',
-"             \   'N': 'bnext!',
-"             \   'p': 'bprevious',
-"             \   'P': 'bprevious!',
-"             \   "\<c-n>": 'tabnext',
-"             \   "\<c-p>": 'tabprevious',
-"             \   '=': 'wincmd =',
-"             \   'w': 'write',
-"             \   't': 'tabnew',
-"             \ }
+" E.g.,
+" let g:win_ext_command_map = {
+"       \   'c': 'wincmd c',
+"       \   'C': 'close!',
+"       \   'q': 'quit',
+"       \   'Q': 'quit!',
+"       \   '!': 'qall!',
+"       \   'V': 'wincmd v',
+"       \   'S': 'wincmd s',
+"       \   'n': 'bnext',
+"       \   'N': 'bnext!',
+"       \   'p': 'bprevious',
+"       \   'P': 'bprevious!',
+"       \   "\<c-n>": 'tabnext',
+"       \   "\<c-p>": 'tabprevious',
+"       \   '=': 'wincmd =',
+"       \   'w': 'write',
+"       \   't': 'tabnew',
+"       \ }
 let g:win_ext_command_map = get(g:, 'win_ext_command_map', {})
 
 highlight default link WinActive DiffAdd
