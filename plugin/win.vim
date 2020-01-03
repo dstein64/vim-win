@@ -221,11 +221,29 @@ function! s:GetChar()
   return l:char
 endfunction
 
+" Returns window count, with special handling to exclude floating and external
+" windows in neovim. The windows with numbers less than or equal to the value
+" returned can be assumed non-floating and non-external windows. The
+" documentation for ":h CTRL-W_w" says "windows are numbered from top-left to
+" bottom-right", which does not ensure this, but checks revealed that floating
+" windows are numbered higher than ordinary windows, regardless of position.
+function! s:WindowCount()
+  if !has('nvim') | return winnr('$') | endif
+  let l:win_count = 0
+  for l:winid in range(1, winnr('$'))
+    let l:config = nvim_win_get_config(win_getid(l:winid))
+    if !get(l:config, 'external', 0) && get(l:config, 'relative', '') ==# ''
+      let l:win_count += 1
+    endif
+  endfor
+  return l:win_count
+endfunction
+
 " Label windows with winnr and return winids of the labels.
 function! s:AddWindowLabels()
   let l:label_winids = []
-  let l:num_wins = winnr('$')
-  for l:winnr in range(1, l:num_wins)
+  let l:win_count = s:WindowCount()
+  for l:winnr in range(1, l:win_count)
     if winheight(l:winnr) ==# 0 || winwidth(l:winnr) ==# 0 | continue | endif
     let [l:row, l:col] = win_screenpos(l:winnr)
     let l:is_active = l:winnr ==# winnr()
@@ -268,7 +286,7 @@ function! s:AddWindowLabels()
             \   'col': 0
             \ }
       let l:label_winid = nvim_open_win(l:buf, 0, l:options)
-      let l:winhighlight = 'Normal:' . l:highlight
+      let l:winhighlight = 'NormalFloat:' . l:highlight
       call setwinvar(win_id2win(l:label_winid), '&winhighlight', l:winhighlight)
       call add(l:label_winids, l:label_winid)
     endif
@@ -298,6 +316,7 @@ function s:ScanWinnrDigits(scan_echo, digits)
     let l:code = char2nr(l:digit)
     if l:code < s:code0 || l:code > s:code9 | return 0 | endif
   endfor
+  let l:win_count = s:WindowCount()
   while 1
     if len(l:digits) > 0
       if l:digits[0] ==# '0' | return 0 | endif
@@ -308,7 +327,7 @@ function s:ScanWinnrDigits(scan_echo, digits)
       let l:code = char2nr(l:digits[-1])
       if l:code < s:code0 || l:code > s:code9 | return 0 | endif
       " TODO: Use a trie to determine completion
-      if len(l:digits) ==# len(string(winnr('$')))
+      if len(l:digits) ==# len(string(l:win_count))
         break
       endif
     endif
@@ -317,7 +336,7 @@ function s:ScanWinnrDigits(scan_echo, digits)
     call add(l:digits, s:GetChar())
   endwhile
   let l:winnr = str2nr(join(l:digits, ''))
-  return l:winnr <= winnr('$') ? l:winnr : 0
+  return l:winnr <= l:win_count ? l:winnr : 0
 endfunction
 
 function s:ScanWinnr(scan_echo)
