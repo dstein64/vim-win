@@ -25,6 +25,21 @@ endif
 let g:win_resize_height = 2
 let g:win_resize_width = 2
 
+" g:win_ext_command_map allows additional commands to be added to win.vim. It
+" maps command keys to command strings. These will override the built-in
+" vim-win commands that use the same keys, except for <esc> and q, which are
+" used for exiting.
+" E.g., let g:win_ext_command_map = {
+"             \   'c': 'wincmd c',
+"             \   "\<c-v>": 'wincmd v',
+"             \   "\<c-s>": 'wincmd s',
+"             \   'n': 'bnext',
+"             \   'p': 'bprevious',
+"             \   '=': 'wincmd =',
+"             \   'w': 'write',
+"             \ }
+let g:win_ext_command_map = get(g:, 'win_ext_command_map', {})
+
 highlight default link WinActive DiffAdd
 highlight default link WinInactive Todo
 highlight default link WinNeighbor Todo
@@ -435,6 +450,8 @@ function! s:Win()
       let l:code = char2nr(l:char)
       if index(s:esc_chars, l:char) !=# -1
         break
+      elseif has_key(g:win_ext_command_map, l:char)
+        execute g:win_ext_command_map[l:char]
       elseif l:char ==# '?'
         call s:ShowHelp()
       elseif l:char ==# 'w'
