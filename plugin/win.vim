@@ -82,7 +82,7 @@ let s:control_left_chars = ["\<c-h>", "\<c-left>"]
 let s:control_down_chars = ["\<c-j>", "\<c-down>"]
 let s:control_up_chars = ["\<c-k>", "\<c-up>"]
 let s:control_right_chars = ["\<c-l>", "\<c-right>"]
-"
+
 " Set 'winwidth' and 'winheight' and return existing values in List.
 function! s:SetWinWidthWinHeight(winwidth, winheight)
   let l:existing = [&winwidth, &winheight]
