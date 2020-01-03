@@ -308,10 +308,11 @@ function! s:RemoveWindowLabels(label_winids)
   if len(a:label_winids) > 0 | call remove(a:label_winids, 0, -1) | endif
 endfunction
 
-" TODO: digits should be optional.
-" TODO: documentation
-function s:ScanWinnrDigits(scan_echo, digits)
-  let l:digits = a:digits[:]
+" Scans user input for a window number. The first argument specifies the
+" initial output (see the documentation for s:Echo), and the optional second
+" argument specifies digits that have already been accumulated.
+function s:ScanWinnrDigits(echo_list, ...)
+  let l:digits = get(a:, 1, [])[:]
   for l:digit in l:digits
     let l:code = char2nr(l:digit)
     if l:code < s:code0 || l:code > s:code9 | return 0 | endif
@@ -328,24 +329,27 @@ function s:ScanWinnrDigits(scan_echo, digits)
       if l:code < s:code0 || l:code > s:code9 | return 0 | endif
       " TODO: Use a trie to determine completion
       if len(l:digits) ==# len(string(l:win_count))
+        " TODO: change to 'return 0' when trie is implemented
         break
       endif
     endif
-    let l:scan_echo = a:scan_echo + [['None', join(l:digits, '')]]
-    call s:Echo(l:scan_echo)
+    let l:echo_list = a:echo_list + [['None', join(l:digits, '')]]
+    call s:Echo(l:echo_list)
     call add(l:digits, s:GetChar())
   endwhile
   let l:winnr = str2nr(join(l:digits, ''))
   return l:winnr <= l:win_count ? l:winnr : 0
 endfunction
 
-function s:ScanWinnr(scan_echo)
+" Scans user input for a window number or movement, returning the target. The
+" argument specifies the initial output (see the documentation for s:Echo).
+function s:ScanWinnr(echo_list)
   let l:winnr = 0
-  call s:Echo(a:scan_echo)
+  call s:Echo(a:echo_list)
   let l:char = s:GetChar()
   " TODO: check for 1-9 same way as above
   if l:char !=# '0' && index(s:digit_chars, l:char) != -1
-    let l:winnr = s:ScanWinnrDigits(a:scan_echo, [l:char])
+    let l:winnr = s:ScanWinnrDigits(a:echo_list, [l:char])
   elseif index(s:left_chars, l:char) !=# -1
     let l:winnr = winnr('h')
   elseif index(s:down_chars, l:char) !=# -1
@@ -372,34 +376,34 @@ function! s:ShowHelp()
   let l:help_lines = [
         \   '* Use the hjkl movement keys to change the active window.',
         \   '* Hold <shift> and use the hjkl movement keys to resize the active window.',
-        \   '  This shifts the right and bottom borders.',
+        \   '  This shifts the window''s right and bottom borders.',
         \   '* Hold <control> and use the hjkl movement keys to resize the active window.',
-        \   '  This shifts the left and top borders.',
+        \   '  This shifts the window''s left and top borders.',
         \   '* Enter a window number to change the active window.',
-        \   '  Where applicable, use leading zero(es) or press <enter> to submit.',
+        \   '  Where applicable, press <enter> to submit.',
         \   '* Press s followed by an hjkl movement key or window number, to swap windows.',
-        \   '* Press <esc> to return or go back (where applicable).',
+        \   '* Press <esc> to leave win.vim or go back (where applicable).',
         \ ]
   let l:help_echo = []
   call add(l:help_echo, ['Title', "win.vim help\n"])
   call add(l:help_echo, ['None', join(l:help_lines, "\n")])
-  call add(l:help_echo, ['Question', "\n[Press any key to continue]"])
+  call add(l:help_echo, ['Question', "\n[Press any key to return]"])
   call s:Echo(l:help_echo)
   call s:GetChar()
 endfunction
 
 function! s:Win()
   let l:label_winids = []
+  let l:prompt = [
+        \   ['StatusLine', '*'],
+        \   ['None', ' '],
+        \   ['ModeMsg', 'win.vim'],
+        \   ['None', '> ']
+        \ ]
   while 1
     call s:RemoveWindowLabels(l:label_winids)
     let l:label_winids = s:AddWindowLabels()
-    let l:prompt_echo = [
-          \   ['StatusLine', '*'],
-          \   ['None', ' '],
-          \   ['ModeMsg', 'win.vim'],
-          \   ['None', '> ']
-          \ ]
-    call s:Echo(l:prompt_echo)
+    call s:Echo(l:prompt)
     let l:char = s:GetChar()
     let l:code = char2nr(l:char)
     if index(s:esc_chars, l:char) !=# -1
@@ -409,11 +413,11 @@ function! s:Win()
     elseif l:char ==# 'w'
       wincmd w
     elseif l:char ==# 's'
-      let l:swap_echo = l:prompt_echo + [['None', 's']]
-      let l:swap_winnr = s:ScanWinnr(l:swap_echo)
+      let l:swap_prompt = l:prompt + [['None', 's']]
+      let l:swap_winnr = s:ScanWinnr(l:swap_prompt)
       if l:swap_winnr !=# 0 | call s:Swap(l:swap_winnr) | endif
     elseif code >= char2nr('1') && code <= char2nr('9')
-      let l:winnr = s:ScanWinnrDigits(l:prompt_echo, [l:char])
+      let l:winnr = s:ScanWinnrDigits(l:prompt, [l:char])
       if l:winnr != 0 | silent! execute l:winnr . 'wincmd w' | endif
     elseif index(s:left_chars, l:char) !=# -1
       wincmd h
