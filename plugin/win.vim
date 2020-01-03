@@ -453,6 +453,10 @@ function! s:Win()
         \ ]
   while 1
     try
+      if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
+        call s:ShowError('vim-win does not work with the command-line window')
+        break
+      endif
       call s:RemoveWindowLabels(l:label_winids)
       let l:label_winids = s:AddWindowLabels()
       call s:Echo(l:prompt)
