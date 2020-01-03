@@ -308,6 +308,35 @@ function! s:RemoveWindowLabels(label_winids)
   if len(a:label_winids) > 0 | call remove(a:label_winids, 0, -1) | endif
 endfunction
 
+" Creates a prefix tree corresponding to window numbers. This is similar to a
+" trie, but there are no values associated with keys, and every node in the
+" tree is a key, given the consecutive ordering of window numbers starting at
+" one.
+function! s:CreateWinnrPrefixTree(win_count)
+  let l:prefix_tree = {}
+  for l:winnr in range(1, a:win_count)
+    let l:ref = l:prefix_tree
+    for l:digit in split(string(l:winnr), '\zs')
+      if !has_key(l:ref, l:digit)
+        let l:ref[l:digit] = {}
+      endif
+      let l:ref = l:ref[l:digit]
+    endfor
+  endfor
+  return l:prefix_tree
+endfunction
+
+function! s:IsPrefixTreeLeaf(prefix_tree, string)
+  let l:ref = a:prefix_tree
+  for l:char in a:string
+    if !has_key(l:ref, l:char)
+      return 0
+    endif
+    let l:ref = l:ref[l:char]
+  endfor
+  return len(l:ref) ==# 0
+endfunction
+
 " Scans user input for a window number. The first argument specifies the
 " initial output (see the documentation for s:Echo), and the optional second
 " argument specifies digits that have already been accumulated.
@@ -327,10 +356,14 @@ function s:ScanWinnrDigits(echo_list, ...)
       endif
       let l:code = char2nr(l:digits[-1])
       if l:code < s:code0 || l:code > s:code9 | return 0 | endif
-      " TODO: Use a trie to determine completion
-      if len(l:digits) ==# len(string(l:win_count))
-        " TODO: change to 'return 0' when trie is implemented
+      if !has_key(l:, 'prefix_tree')
+        let l:prefix_tree = s:CreateWinnrPrefixTree(l:win_count)
+      endif
+      if s:IsPrefixTreeLeaf(l:prefix_tree, l:digits)
         break
+      endif
+      if len(l:digits) ==# len(string(l:win_count))
+        return 0
       endif
     endif
     let l:echo_list = a:echo_list + [['None', join(l:digits, '')]]
