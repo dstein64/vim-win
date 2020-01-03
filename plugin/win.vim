@@ -223,7 +223,7 @@ endfunction
 
 " Returns window count, with special handling to exclude floating and external
 " windows in neovim. The windows with numbers less than or equal to the value
-" returned can be assumed non-floating and non-external windows. The
+" returned are assumed non-floating and non-external windows. The
 " documentation for ":h CTRL-W_w" says "windows are numbered from top-left to
 " bottom-right", which does not ensure this, but checks revealed that floating
 " windows are numbered higher than ordinary windows, regardless of position.
