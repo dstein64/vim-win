@@ -2,7 +2,6 @@
 " TODO: autoload
 " TODO: alternative approach for resizing windows (current doesn't always
 " work properly)..
-" TODO: highlight status line? (change color when error?)
 
 " Set g:force_load_win = 1 to force load.
 if !get(g:, 'force_load_win', 0) && exists('g:loaded_win')
@@ -29,6 +28,23 @@ let g:win_resize_width = 2
 let s:popupwin = has('popupwin')
 let s:floatwin = exists('*nvim_open_win') && exists('*nvim_win_close')
 
+let s:code0 = char2nr('0')
+let s:code9 = char2nr('9')
+let s:esc_chars = ["\<esc>", 'q']
+let s:left_chars = ['h', "\<left>"]
+let s:down_chars = ['j', "\<down>"]
+let s:up_chars = ['k', "\<up>"]
+let s:right_chars = ['l', "\<right>"]
+let s:shift_left_chars = ['H', "\<s-left>"]
+let s:shift_down_chars = ['J', "\<s-down>"]
+let s:shift_up_chars = ['K', "\<s-up>"]
+let s:shift_right_chars = ['L', "\<s-right>"]
+let s:control_left_chars = ["\<c-h>", "\<c-left>"]
+let s:control_down_chars = ["\<c-j>", "\<c-down>"]
+let s:control_up_chars = ["\<c-k>", "\<c-up>"]
+let s:control_right_chars = ["\<c-l>", "\<c-right>"]
+let s:digit_chars = split('0123456789', '\zs')
+"
 " Set 'winwidth' and 'winheight' and return existing values in List.
 function! s:SetWinWidthWinHeight(winwidth, winheight)
   let existing = [&winwidth, &winheight]
@@ -274,40 +290,43 @@ function! s:RemoveWindowLabels(label_winids)
   if len(a:label_winids) > 0 | call remove(a:label_winids, 0, -1) | endif
 endfunction
 
-let s:esc_chars = ["\<esc>", 'q']
-let s:left_chars = ['h', "\<left>"]
-let s:down_chars = ['j', "\<down>"]
-let s:up_chars = ['k', "\<up>"]
-let s:right_chars = ['l', "\<right>"]
-let s:shift_left_chars = ['H', "\<s-left>"]
-let s:shift_down_chars = ['J', "\<s-down>"]
-let s:shift_up_chars = ['K', "\<s-up>"]
-let s:shift_right_chars = ['L', "\<s-right>"]
-let s:control_left_chars = ["\<c-h>", "\<c-left>"]
-let s:control_down_chars = ["\<c-j>", "\<c-down>"]
-let s:control_up_chars = ["\<c-k>", "\<c-up>"]
-let s:control_right_chars = ["\<c-l>", "\<c-right>"]
-let s:digit_chars = split('0123456789', '\zs')
-let s:help_lines = [
-      \   '* Use the hjkl movement keys to change the active window.',
-      \   '* Hold <shift> and use the hjkl movement keys to resize the active window.',
-      \   '  This shifts the right and bottom borders.',
-      \   '* Hold <control> and use the hjkl movement keys to resize the active window.',
-      \   '  This shifts the left and top borders.',
-      \   '* Enter a window number to change the active window.',
-      \   '  Where applicable, use leading zero(es) or press <enter> to submit.',
-      \   '* Press s followed by an hjkl movement key or window number, to swap windows.',
-      \   '* Press <esc> to return or go back (where applicable).',
-      \ ]
+" TODO: digits should be optional.
+" TODO: documentation
+function s:ScanWinnrDigits(scan_echo, digits)
+  let l:digits = a:digits[:]
+  for l:digit in l:digits
+    let l:code = char2nr(l:digit)
+    if l:code < s:code0 || l:code > s:code9 | return 0 | endif
+  endfor
+  while 1
+    if len(l:digits) > 0
+      if l:digits[0] ==# '0' | return 0 | endif
+      if l:digits[-1] ==# "\<cr>"
+        call remove(l:digits, -1)
+        break
+      endif
+      let l:code = char2nr(l:digits[-1])
+      if l:code < s:code0 || l:code > s:code9 | return 0 | endif
+      " TODO: Use a trie to determine completion
+      if len(l:digits) ==# len(string(winnr('$')))
+        break
+      endif
+    endif
+    let l:scan_echo = a:scan_echo + [['None', join(l:digits, '')]]
+    call s:Echo(l:scan_echo)
+    call add(l:digits, s:GetChar())
+  endwhile
+  let l:winnr = str2nr(join(l:digits, ''))
+  return l:winnr <= winnr('$') ? l:winnr : 0
+endfunction
 
-function s:GetWindowNr()
-  " TODO: support windows higher than 9 (failing on 0 or numbers out of
-  " range).
-  " TODO: update the echo message accordingly to show characters.
-  let l:winnr = winnr()
+function s:ScanWinnr(scan_echo)
+  let l:winnr = 0
+  call s:Echo(a:scan_echo)
   let l:char = s:GetChar()
+  " TODO: check for 1-9 same way as above
   if l:char !=# '0' && index(s:digit_chars, l:char) != -1
-    let l:winnr = str2nr(l:char)
+    let l:winnr = s:ScanWinnrDigits(a:scan_echo, [l:char])
   elseif index(s:left_chars, l:char) !=# -1
     let l:winnr = winnr('h')
   elseif index(s:down_chars, l:char) !=# -1
@@ -320,9 +339,8 @@ function s:GetWindowNr()
   return l:winnr
 endfunction
 
-" TODO: update docs
 " Takes a list of lists. Each sublist is comprised of a highlight group name
-" and a corresponding string. Returns a command for echoing.
+" and a corresponding string to echo.
 function! s:Echo(echo_list)
   redraw
   for [l:hlgroup, l:string] in a:echo_list
@@ -331,36 +349,53 @@ function! s:Echo(echo_list)
   echohl None
 endfunction
 
+function! s:ShowHelp()
+  let l:help_lines = [
+        \   '* Use the hjkl movement keys to change the active window.',
+        \   '* Hold <shift> and use the hjkl movement keys to resize the active window.',
+        \   '  This shifts the right and bottom borders.',
+        \   '* Hold <control> and use the hjkl movement keys to resize the active window.',
+        \   '  This shifts the left and top borders.',
+        \   '* Enter a window number to change the active window.',
+        \   '  Where applicable, use leading zero(es) or press <enter> to submit.',
+        \   '* Press s followed by an hjkl movement key or window number, to swap windows.',
+        \   '* Press <esc> to return or go back (where applicable).',
+        \ ]
+  let l:help_echo = []
+  call add(l:help_echo, ['Title', "win.vim help\n"])
+  call add(l:help_echo, ['None', join(l:help_lines, "\n")])
+  call add(l:help_echo, ['Question', "\n[Press any key to continue]"])
+  call s:Echo(l:help_echo)
+  call s:GetChar()
+endfunction
+
 function! s:Win()
   let l:label_winids = []
   while 1
     call s:RemoveWindowLabels(l:label_winids)
     let l:label_winids = s:AddWindowLabels()
-    let l:prompt_echo_list = [['ModeMsg', 'win.vim'], ['None', '> ']]
-    call s:Echo(l:prompt_echo_list)
+    let l:prompt_echo = [
+          \   ['StatusLine', '*'],
+          \   ['None', ' '],
+          \   ['ModeMsg', 'win.vim'],
+          \   ['None', '> ']
+          \ ]
+    call s:Echo(l:prompt_echo)
     let l:char = s:GetChar()
+    let l:code = char2nr(l:char)
     if index(s:esc_chars, l:char) !=# -1
       break
     elseif l:char ==# '?'
-      let l:help_echo_list = []
-      call add(l:help_echo_list, ['Title', "win.vim help\n"])
-      call add(l:help_echo_list, ['None', join(s:help_lines, "\n")])
-      call add(l:help_echo_list, ['Question', "\n[Press any key to continue]"])
-      call s:Echo(l:help_echo_list)
-      call s:GetChar()
+      call s:ShowHelp()
     elseif l:char ==# 'w'
       wincmd w
     elseif l:char ==# 's'
-      call add(l:prompt_echo_list, ['None', 's'])
-      call s:Echo(l:prompt_echo_list)
-      let l:swap_winnr = s:GetWindowNr()
-      call s:Swap(l:swap_winnr)
-    elseif l:char != '0' && index(s:digit_chars, l:char) !=# -1
-      continue
-      while 1
-        call add(l:prompt_echo_list, ['None', nr2char(l:char)])
-        call s:Echo(l:prompt_echo_list)
-      endwhile
+      let l:swap_echo = l:prompt_echo + [['None', 's']]
+      let l:swap_winnr = s:ScanWinnr(l:swap_echo)
+      if l:swap_winnr !=# 0 | call s:Swap(l:swap_winnr) | endif
+    elseif code >= char2nr('1') && code <= char2nr('9')
+      let l:winnr = s:ScanWinnrDigits(l:prompt_echo, [l:char])
+      if l:winnr != 0 | silent! execute l:winnr . 'wincmd w' | endif
     elseif index(s:left_chars, l:char) !=# -1
       wincmd h
     elseif index(s:down_chars, l:char) !=# -1
