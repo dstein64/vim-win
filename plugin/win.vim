@@ -85,10 +85,10 @@ let s:control_right_chars = ["\<c-l>", "\<c-right>"]
 "
 " Set 'winwidth' and 'winheight' and return existing values in List.
 function! s:SetWinWidthWinHeight(winwidth, winheight)
-  let existing = [&winwidth, &winheight]
+  let l:existing = [&winwidth, &winheight]
   let &winwidth = a:winwidth
   let &winheight = a:winheight
-  return existing
+  return l:existing
 endfunction
 
 " Moves the bottom border of the active window up (unless on the bottom row).
