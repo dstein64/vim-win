@@ -281,7 +281,7 @@ function! s:AddWindowLabels()
       call add(l:label_winids, l:label_winid)
     elseif s:floatwin
       " Keep track of floatwin buffer numbers, so they can be reused. This prevents
-      " the buffer list numbers from getting high from usage of win.vim.
+      " the buffer list numbers from getting high from usage of vim-win.
       if !has_key(s:, 'floatwin_bufnrs')
         let s:floatwin_bufnrs = []
       endif
@@ -397,10 +397,10 @@ function! s:ShowHelp()
         \   '* Enter a window number to change the active window.',
         \   '  Where applicable, press <enter> to submit.',
         \   '* Press s followed by an hjkl movement key or window number, to swap windows.',
-        \   '* Press <esc> to leave win.vim or go back (where applicable).',
+        \   '* Press <esc> to leave vim-win or go back (where applicable).',
         \ ]
   let l:help_echo = []
-  call add(l:help_echo, ['Title', "win.vim help\n"])
+  call add(l:help_echo, ['Title', "vim-win help\n"])
   call add(l:help_echo, ['None', join(l:help_lines, "\n")])
   call add(l:help_echo, ['Question', "\n[Press any key to return]"])
   call s:Echo(l:help_echo)
@@ -412,7 +412,7 @@ function! s:Win()
   let l:prompt = [
         \   ['WinStar', '*'],
         \   ['None', ' '],
-        \   ['WinPrompt', 'win.vim'],
+        \   ['WinPrompt', 'vim-win'],
         \   ['None', '> ']
         \ ]
   while 1
