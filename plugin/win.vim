@@ -45,7 +45,6 @@ let g:win_resize_width = 2
 "        \   "\<c-n>": 'tabnext',
 "        \   "\<c-p>": 'tabprevious',
 "        \   '=': 'wincmd =',
-"        \   'w': 'write',
 "        \   't': 'tabnew',
 "        \ }
 let g:win_ext_command_map = get(g:, 'win_ext_command_map', {})
@@ -521,7 +520,9 @@ function! s:Win()
         call s:ResizeLeftRight()
       endif
     catch
-      call s:ShowError(v:exception)
+      let l:message = v:throwpoint . "\n" . v:exception
+      call s:ShowError(l:message)
+      break
     endtry
   endwhile
   call s:RemoveWindowLabels(l:label_winids)
