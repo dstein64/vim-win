@@ -295,11 +295,16 @@ function! s:AddWindowLabels()
     let l:label .= ']'
     let l:label = l:label[:winwidth(l:winnr) - 1]
     let l:highlight = 'WinInactive'
-    for l:motion in ['h', 'j', 'k', 'l']
-      if l:winnr ==# winnr(l:motion)
-        let l:highlight = 'WinNeighbor'
-      endif
-    endfor
+    " Vim 8.1.1140 updated the winnr function to take a motion character. Use
+    " a try block since this is not supported in older versions of Vim.
+    try
+      for l:motion in ['h', 'j', 'k', 'l']
+        if l:winnr ==# winnr(l:motion)
+          let l:highlight = 'WinNeighbor'
+        endif
+      endfor
+    catch
+    endtry
     if l:winnr ==# winnr()
       let l:highlight = 'WinActive'
     endif
@@ -370,7 +375,7 @@ endfunction
 " Scans user input for a window number. The first argument specifies the
 " initial output (see the documentation for s:Echo), and the optional second
 " argument specifies digits that have already been accumulated.
-function s:ScanWinnrDigits(echo_list, ...)
+function! s:ScanWinnrDigits(echo_list, ...)
   let l:digits = get(a:, 1, [])[:]
   for l:digit in l:digits
     let l:code = char2nr(l:digit)
@@ -403,7 +408,7 @@ endfunction
 
 " Scans user input for a window number or movement, returning the target. The
 " argument specifies the initial output (see the documentation for s:Echo).
-function s:ScanWinnr(echo_list)
+function! s:ScanWinnr(echo_list)
   let l:winnr = 0
   call s:Echo(a:echo_list)
   let l:char = s:GetChar()
@@ -510,8 +515,6 @@ function! s:Win()
       elseif index(s:control_right_chars, l:char) !=# -1
         call s:ResizeLeftRight()
       endif
-    catch
-      call s:ShowError(v:exception)
     endtry
   endwhile
   call s:RemoveWindowLabels(l:label_winids)
