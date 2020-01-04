@@ -446,7 +446,7 @@ function! s:ShowHelp()
   let l:echo_list = []
   call add(l:echo_list, ['Title', "vim-win help\n"])
   call add(l:echo_list, ['None', join(l:help_lines, "\n")])
-  call add(l:echo_list, ['Question', "\n[Press any key to return]"])
+  call add(l:echo_list, ['Question', "\n[Press any key to continue]"])
   call s:Echo(l:echo_list)
   call s:GetChar()
 endfunction
