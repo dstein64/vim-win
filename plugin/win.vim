@@ -249,7 +249,12 @@ endfunction
 
 function! s:GetChar()
   try
-    let l:char = getchar()
+    while 1
+      let l:char = getchar()
+      if v:mouse_win ># 0 | continue | endif
+      if l:char ==# "\<CursorHold>" | continue | endif
+      break
+    endwhile
   catch
     " E.g., <c-c>
     let l:char = char2nr("\<esc>")
