@@ -520,6 +520,8 @@ function! s:Win()
       elseif index(s:control_right_chars, l:char) !=# -1
         call s:ResizeLeftRight()
       endif
+    catch
+      call s:ShowError(v:exception)
     endtry
   endwhile
   call s:RemoveWindowLabels(l:label_winids)
