@@ -82,6 +82,82 @@ let s:control_down_chars = ["\<c-j>", "\<c-down>"]
 let s:control_up_chars = ["\<c-k>", "\<c-up>"]
 let s:control_right_chars = ["\<c-l>", "\<c-right>"]
 
+" Returns window count, with special handling to exclude floating and external
+" windows in neovim. The windows with numbers less than or equal to the value
+" returned are assumed non-floating and non-external windows. The
+" documentation for ":h CTRL-W_w" says "windows are numbered from top-left to
+" bottom-right", which does not ensure this, but checks revealed that floating
+" windows are numbered higher than ordinary windows, regardless of position.
+function! s:WindowCount()
+  if !has('nvim') || !exists('*nvim_win_get_config')
+    return winnr('$')
+  endif
+  let l:win_count = 0
+  for l:winid in range(1, winnr('$'))
+    let l:config = nvim_win_get_config(win_getid(l:winid))
+    if !get(l:config, 'external', 0) && get(l:config, 'relative', '') ==# ''
+      let l:win_count += 1
+    endif
+  endfor
+  return l:win_count
+endfunction
+
+" Returns a dictionary with boundaries for the specified window.
+" Dictionary keys correspond to directions hjkl.
+function! s:GetBoundaries(winnr)
+    let [l:k, l:h] = win_screenpos(a:winnr)
+    let l:j = l:k + winheight(a:winnr) - 1
+    let l:l = l:h + winwidth(a:winnr) - 1
+    let l:boundaries = {'h': l:h, 'j': l:j, 'k': l:k, 'l': l:l}
+    return l:boundaries
+endfunction
+
+" TODO: take arg specifying which direction to expand and how much
+" TODO: add documentation
+" TODO: prefix with s:
+" TODO: this doesn't currently work.
+function! Expand(dir)
+  " TODO: check dir is hjkl and throw error otherwise
+  if winnr(a:dir) ==# winnr() | return | endif
+  let l:hl = a:dir ==# 'h' || a:dir ==# 'l'
+  let l:hk = a:dir ==# 'h' || a:dir ==# 'k'
+  let l:resize_prefix = l:hl ? 'vertical ' : ''
+  let l:winmin = l:hl ? &winminwidth : &winminheight
+  let l:win_count = s:WindowCount()
+  let l:boundaries = [{}]
+  for l:winnr in range(1, l:win_count)
+    let l:boundary = s:GetBoundaries(l:winnr)
+    call add(l:boundaries, l:boundary)
+  endfor
+  let l:sorted_windows = range(1, l:win_count)
+  "TODO (perhaps this should be 'h' in this case for 'l' above (actually
+  "probably not since that might then try to shrink full width windows).
+  let l:Compare = {x, y -> l:boundaries[x][a:dir] - l:boundaries[y][a:dir]}
+  call sort(l:sorted_windows, l:Compare)
+  if l:hk | call reverse(l:sorted_windows) | endif
+  for l:winnr in l:sorted_windows
+    let l:boundary = l:boundaries[l:winnr]
+    " TODO: this can probably be constrained further to windows with
+    " overlapping rows or columns, but may not matter.
+    " TODO does following need inequality? (will have to switch direction
+    " conditionally)
+    if l:boundary[a:dir] ==# l:boundaries[winnr()][a:dir] | break | endif
+    execute l:resize_prefix . l:winnr . 'resize ' . l:winmin
+  endfor
+  let l:diff = l:hl ? g:win_resize_width : g:win_resize_height
+  execute l:resize_prefix . winnr() . 'resize +' . l:diff
+  for l:winnr in l:sorted_windows
+    let l:boundary = l:boundaries[l:winnr]
+    " TODO: see TODOs in loop above
+    " TODO does following need inequality? (will have to switch direction
+    " conditionally)
+    if l:boundary[a:dir] ==# l:boundaries[winnr()][a:dir] | break | endif
+    let l:upper = l:boundaries[l:winnr][l:hl ? 'l' : 'j']
+    let l:lower = l:boundaries[l:winnr][l:hl ? 'h' : 'k']
+    execute l:resize_prefix . l:winnr . 'resize ' . (l:upper - l:lower + 1)
+  endfor
+endfunction
+
 " Set 'winwidth' and 'winheight' and return existing values in List.
 function! s:SetWinWidthWinHeight(winwidth, winheight)
   let l:existing = [&winwidth, &winheight]
@@ -262,26 +338,6 @@ function! s:GetChar()
     let l:char = nr2char(l:char)
   endif
   return l:char
-endfunction
-
-" Returns window count, with special handling to exclude floating and external
-" windows in neovim. The windows with numbers less than or equal to the value
-" returned are assumed non-floating and non-external windows. The
-" documentation for ":h CTRL-W_w" says "windows are numbered from top-left to
-" bottom-right", which does not ensure this, but checks revealed that floating
-" windows are numbered higher than ordinary windows, regardless of position.
-function! s:WindowCount()
-  if !has('nvim') || !exists('*nvim_win_get_config')
-    return winnr('$')
-  endif
-  let l:win_count = 0
-  for l:winid in range(1, winnr('$'))
-    let l:config = nvim_win_get_config(win_getid(l:winid))
-    if !get(l:config, 'external', 0) && get(l:config, 'relative', '') ==# ''
-      let l:win_count += 1
-    endif
-  endfor
-  return l:win_count
 endfunction
 
 " Label windows with winnr and return winids of the labels.
@@ -480,7 +536,7 @@ function! s:Win()
   endif
   if !g:win_disable_version_warning && !s:popupwin && !s:floatwin
     let l:warning_lines = [
-          \   'Full vim-win functionality requires vim>=8.2 or nvim>=0.4.3.',
+          \   'Full vim-win functionality requires vim>=8.2 or nvim>=0.4.0.',
           \   'Set g:win_disable_version_warning = 1 to disable this warning.'
           \ ]
     call s:ShowWarning(join(l:warning_lines, "\n"))
@@ -504,7 +560,7 @@ function! s:Win()
       call s:Echo(l:prompt)
       let l:char = s:GetChar()
       let l:code = char2nr(l:char)
-      if l:char ==# "\<c-d>" || index(s:esc_chars, l:char) !=# -1
+      if index(s:esc_chars, l:char) !=# -1
         break
       elseif l:char ==# '?'
         call s:ShowHelp()
