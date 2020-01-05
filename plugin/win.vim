@@ -503,7 +503,7 @@ function! s:Win()
       call s:Echo(l:prompt)
       let l:char = s:GetChar()
       let l:code = char2nr(l:char)
-      if index(s:esc_chars, l:char) !=# -1
+      if l:char ==# "\<c-d>" || index(s:esc_chars, l:char) !=# -1
         break
       elseif l:char ==# '?'
         call s:ShowHelp()
