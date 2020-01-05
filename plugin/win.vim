@@ -24,7 +24,7 @@ endif
 
 let g:win_resize_height = 2
 let g:win_resize_width = 2
-
+let g:win_disable_version_warning = get(g:, 'win_disable_version_warning', 0)
 " g:win_ext_command_map allows additional commands to be added to win.vim. It
 " maps command keys to command strings. These will override the built-in
 " vim-win commands that use the same keys, except for 1) <esc>, which is used
@@ -299,16 +299,11 @@ function! s:AddWindowLabels()
     let l:label .= ']'
     let l:label = l:label[:winwidth(l:winnr) - 1]
     let l:highlight = 'WinInactive'
-    " Vim 8.1.1140 updated the winnr function to take a motion character. Use
-    " a try block since this is not supported in older versions of Vim.
-    try
-      for l:motion in ['h', 'j', 'k', 'l']
-        if l:winnr ==# winnr(l:motion)
-          let l:highlight = 'WinNeighbor'
-        endif
-      endfor
-    catch
-    endtry
+    for l:motion in ['h', 'j', 'k', 'l']
+      if l:winnr ==# winnr(l:motion)
+        let l:highlight = 'WinNeighbor'
+      endif
+    endfor
     if l:winnr ==# winnr()
       let l:highlight = 'WinActive'
     endif
@@ -344,7 +339,7 @@ function! s:AddWindowLabels()
             \   'col': 0
             \ }
       let l:label_winid = nvim_open_win(l:buf, 0, l:options)
-      let l:winhighlight = 'NormalFloat:' . l:highlight
+      let l:winhighlight = 'Normal:' . l:highlight
       call setwinvar(win_id2win(l:label_winid), '&winhighlight', l:winhighlight)
       call add(l:label_winids, l:label_winid)
     endif
@@ -449,6 +444,7 @@ function! s:ShowHelp()
   call add(l:echo_list, ['Question', "\n[Press any key to continue]"])
   call s:Echo(l:echo_list)
   call s:GetChar()
+  redraw | echo ''
 endfunction
 
 function! s:ShowError(message)
@@ -458,6 +454,17 @@ function! s:ShowError(message)
   call add(l:echo_list, ['Question', "\n[Press any key to return]"])
   call s:Echo(l:echo_list)
   call s:GetChar()
+  redraw | echo ''
+endfunction
+
+function! s:ShowWarning(message)
+  let l:echo_list = []
+  call add(l:echo_list, ['Title', "vim-win warning\n"])
+  call add(l:echo_list, ['Error', a:message])
+  call add(l:echo_list, ['Question', "\n[Press any key to return]"])
+  call s:Echo(l:echo_list)
+  call s:GetChar()
+  redraw | echo ''
 endfunction
 
 function! s:Beep()
@@ -465,6 +472,19 @@ function! s:Beep()
 endfunction
 
 function! s:Win()
+  if !has('patch-8.1.1140') && !has('nvim-0.4.3')
+    " Vim 8.1.1140 and nvim-0.4.3 updated the winnr function to take a motion
+    " character, functionality utilized by vim-win.
+    call s:ShowError('vim-win requires vim>=8.1.1140 or nvim>=0.4.3')
+    return
+  endif
+  if !g:win_disable_version_warning && !s:popupwin && !s:floatwin
+    let l:warning_lines = [
+          \   'Full vim-win functionality requires vim>=8.2 or nvim>=0.4.3.',
+          \   'Set g:win_disable_version_warning = 1 to disable this warning.'
+          \ ]
+    call s:ShowWarning(join(l:warning_lines, "\n"))
+  endif
   let l:label_winids = []
   let l:prompt = [
         \   ['WinStar', '*'],
