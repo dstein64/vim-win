@@ -448,6 +448,7 @@ function! s:ShowHelp()
 endfunction
 
 function! s:ShowError(message)
+  call s:Beep()
   let l:echo_list = []
   call add(l:echo_list, ['Title', "vim-win error\n"])
   call add(l:echo_list, ['Error', a:message])
@@ -544,7 +545,6 @@ function! s:Win()
         call s:ResizeLeftRight()
       endif
     catch
-      call s:Beep()
       let l:message = v:throwpoint . "\n" . v:exception
       call s:ShowError(l:message)
       break
