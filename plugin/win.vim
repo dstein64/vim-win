@@ -460,6 +460,10 @@ function! s:ShowError(message)
   call s:GetChar()
 endfunction
 
+function! s:Beep()
+  execute "normal \<esc>"
+endfunction
+
 function! s:Win()
   let l:label_winids = []
   let l:prompt = [
@@ -520,6 +524,7 @@ function! s:Win()
         call s:ResizeLeftRight()
       endif
     catch
+      call s:Beep()
       let l:message = v:throwpoint . "\n" . v:exception
       call s:ShowError(l:message)
       break
