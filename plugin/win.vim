@@ -109,6 +109,10 @@ function! s:WindowCount()
   return l:win_count
 endfunction
 
+function! s:Contains(list, element)
+  return index(a:list, a:element) !=# -1
+endfunction
+
 " The following few functions are for resizing windows. The current approach
 " resizes windows by using a function that expands a window. Various other
 " approaches were attempted (including other approaches for window expansion),
@@ -196,10 +200,10 @@ endfunction
 function! s:Resize(border, direction)
   let l:horizontal = ['h', 'l']
   let l:vertical = ['j', 'k']
-  if index(l:horizontal, a:border) ># -1
-        \ && index(l:horizontal, a:direction) ==# -1 | return | endif
-  if index(l:vertical, a:border) ># -1
-        \ && index(l:vertical, a:direction) ==# -1 | return | endif
+  if s:Contains(l:horizontal, a:border)
+        \ && !s:Contains(l:horizontal, a:direction) | return | endif
+  if s:Contains(l:vertical, a:border)
+        \ && !s:Contains(l:vertical, a:direction) | return | endif
   let l:winnr = winnr()
   if a:border ==# a:direction
     call s:Expand(l:winnr, a:direction)
@@ -388,13 +392,13 @@ function! s:ScanWinnr(echo_list)
   let l:code = char2nr(l:char)
   if l:code >=# s:code1 && l:code <=# s:code9
     let l:winnr = s:ScanWinnrDigits(a:echo_list, [l:char])
-  elseif index(s:left_chars, l:char) !=# -1
+  elseif s:Contains(s:left_chars, l:char)
     let l:winnr = winnr('h')
-  elseif index(s:down_chars, l:char) !=# -1
+  elseif s:Contains(s:down_chars, l:char)
     let l:winnr = winnr('j')
-  elseif index(s:up_chars, l:char) !=# -1
+  elseif s:Contains(s:up_chars, l:char)
     let l:winnr = winnr('k')
-  elseif index(s:right_chars, l:char) !=# -1
+  elseif s:Contains(s:right_chars, l:char)
     let l:winnr = winnr('l')
   endif
   return l:winnr
@@ -490,7 +494,7 @@ function! s:Win()
       call s:Echo(l:prompt)
       let l:char = s:GetChar()
       let l:code = char2nr(l:char)
-      if index(s:esc_chars, l:char) !=# -1
+      if s:Contains(s:esc_chars, l:char)
         break
       elseif l:char ==# '?'
         call s:ShowHelp()
@@ -505,29 +509,29 @@ function! s:Win()
       elseif l:code >=# s:code1 && l:code <=# s:code9
         let l:winnr = s:ScanWinnrDigits(l:prompt, [l:char])
         if l:winnr !=# 0 | silent! execute l:winnr . 'wincmd w' | endif
-      elseif index(s:left_chars, l:char) !=# -1
+      elseif s:Contains(s:left_chars, l:char)
         wincmd h
-      elseif index(s:down_chars, l:char) !=# -1
+      elseif s:Contains(s:down_chars, l:char)
         wincmd j
-      elseif index(s:up_chars, l:char) !=# -1
+      elseif s:Contains(s:up_chars, l:char)
         wincmd k
-      elseif index(s:right_chars, l:char) !=# -1
+      elseif s:Contains(s:right_chars, l:char)
         wincmd l
-      elseif index(s:shift_left_chars, l:char) !=# -1
+      elseif s:Contains(s:shift_left_chars, l:char)
         call s:Resize('l', 'h')
-      elseif index(s:shift_down_chars, l:char) !=# -1
+      elseif s:Contains(s:shift_down_chars, l:char)
         call s:Resize('j', 'j')
-      elseif index(s:shift_up_chars, l:char) !=# -1
+      elseif s:Contains(s:shift_up_chars, l:char)
         call s:Resize('j', 'k')
-      elseif index(s:shift_right_chars, l:char) !=# -1
+      elseif s:Contains(s:shift_right_chars, l:char)
         call s:Resize('l', 'l')
-      elseif index(s:control_left_chars, l:char) !=# -1
+      elseif s:Contains(s:control_left_chars, l:char)
         call s:Resize('h', 'h')
-      elseif index(s:control_down_chars, l:char) !=# -1
+      elseif s:Contains(s:control_down_chars, l:char)
         call s:Resize('k', 'j')
-      elseif index(s:control_up_chars, l:char) !=# -1
+      elseif s:Contains(s:control_up_chars, l:char)
         call s:Resize('k', 'k')
-      elseif index(s:control_right_chars, l:char) !=# -1
+      elseif s:Contains(s:control_right_chars, l:char)
         call s:Resize('h', 'l')
       endif
     catch
