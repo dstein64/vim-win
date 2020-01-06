@@ -340,6 +340,62 @@ function! s:GetChar()
   return l:char
 endfunction
 
+" Show a popup window and return the window ID (returning 0 if popups are
+" returns 0.
+" unsupported or the popup could not be displayed).
+function! s:OpenPopup(text, highlight, row, col)
+  let l:winid = 0
+  if s:popupwin
+    " A popup cannot start in the last or second to last column. It is placed
+    " starting in the third to last column.
+    if a:col >=# &columns - 1 | return l:winid | endif
+    let l:options = {
+          \   'highlight': a:highlight,
+          \   'line': a:row,
+          \   'col': a:col,
+          \ }
+    let l:winid = popup_create(a:text, l:options)
+  elseif s:floatwin
+    if has_key(s:, 'floatwin_avail_bufnrs') && len(s:floatwin_avail_bufnrs) > 0
+      let l:buf = s:floatwin_avail_bufnrs[-1]
+      call remove(s:floatwin_avail_bufnrs, -1)
+    else
+      let l:buf = nvim_create_buf(0, 1)
+    endif
+    call nvim_buf_set_lines(l:buf, 0, -1, 1, [a:text])
+    let l:options = {
+          \   'relative': 'editor',
+          \   'focusable': 0,
+          \   'style': 'minimal',
+          \   'height': 1,
+          \   'width': len(a:text),
+          \   'row': a:row - 1,
+          \   'col': a:col - 1
+          \ }
+    let l:winid = nvim_open_win(l:buf, 0, l:options)
+    let l:winhighlight = 'Normal:' . a:highlight
+    call setwinvar(win_id2win(l:winid), '&winhighlight', l:winhighlight)
+  endif
+  return l:winid
+endfunction
+
+function! s:ClosePopup(winid)
+  if s:popupwin
+    call popup_close(a:winid)
+  elseif s:floatwin
+    " Keep track of available floatwin buffer numbers, so they can be reused.
+    " This prevents the buffer list numbers from getting high from usage of
+    " vim-win. This is list is used by OpenPopup.
+    if !has_key(s:, 'floatwin_avail_bufnrs')
+      let s:floatwin_avail_bufnrs = []
+    endif
+    call add(s:floatwin_avail_bufnrs, winbufnr(a:winid))
+    " The buffer is not deleted, which is intended since it's reused by
+    " OpenPopup.
+    call nvim_win_close(a:winid, 1)
+  endif
+endfunction
+
 " Label windows with winnr and return winids of the labels.
 function! s:AddWindowLabels()
   let l:label_winids = []
@@ -363,42 +419,7 @@ function! s:AddWindowLabels()
     if l:winnr ==# winnr()
       let l:highlight = 'WinActive'
     endif
-    if s:popupwin
-      " When there are 2 or less columns in a rightmost window, popup text
-      " overlaps the vertical separator line.
-      if l:col >=# &columns - 1 | continue | endif
-      let l:options = {
-            \   'highlight': l:highlight,
-            \   'line': l:row,
-            \   'col': l:col,
-            \ }
-      let l:label_winid = popup_create(l:label, l:options)
-      call add(l:label_winids, l:label_winid)
-    elseif s:floatwin
-      " Keep track of floatwin buffer numbers, so they can be reused. This prevents
-      " the buffer list numbers from getting high from usage of vim-win.
-      if !has_key(s:, 'floatwin_bufnrs')
-        let s:floatwin_bufnrs = []
-      endif
-      if l:winnr ># len(s:floatwin_bufnrs)
-        call add(s:floatwin_bufnrs, nvim_create_buf(0, 1))
-      endif
-      let l:buf = s:floatwin_bufnrs[l:winnr - 1]
-      call nvim_buf_set_lines(l:buf, 0, -1, 1, [l:label])
-      let l:options = {
-            \   'relative': 'win',
-            \   'style': 'minimal',
-            \   'win': win_getid(l:winnr),
-            \   'height': 1,
-            \   'width': len(l:label),
-            \   'row': 0,
-            \   'col': 0
-            \ }
-      let l:label_winid = nvim_open_win(l:buf, 0, l:options)
-      let l:winhighlight = 'Normal:' . l:highlight
-      call setwinvar(win_id2win(l:label_winid), '&winhighlight', l:winhighlight)
-      call add(l:label_winids, l:label_winid)
-    endif
+    call add(l:label_winids, s:OpenPopup(l:label, l:highlight, l:row, l:col))
   endfor
   return l:label_winids
 endfunction
@@ -406,13 +427,7 @@ endfunction
 " Remove the specified windows, and empty the list.
 function! s:RemoveWindowLabels(label_winids)
   for l:label_winid in a:label_winids
-    if s:popupwin
-      call popup_close(l:label_winid)
-    elseif s:floatwin
-      " The buffer is not deleted, which is intended since it's reused above in
-      " s:AddWindowLabels.
-      call nvim_win_close(l:label_winid, 1)
-    endif
+    call s:ClosePopup(l:label_winid)
   endfor
   if len(a:label_winids) ># 0 | call remove(a:label_winids, 0, -1) | endif
 endfunction
