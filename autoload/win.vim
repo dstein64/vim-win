@@ -134,7 +134,7 @@ function! s:Resize(border, direction)
   if s:Contains(l:vertical, a:border)
         \ && !s:Contains(l:vertical, a:direction) | return | endif
   let l:winnr = winnr()
-  if a:border ==# a:direction
+  if a:border ==# a:direction && l:winnr !=# winnr(a:direction)
     call s:Expand(l:winnr, a:direction)
   elseif winnr(a:border) !=# l:winnr
     call s:Expand(winnr(a:border), a:direction)
