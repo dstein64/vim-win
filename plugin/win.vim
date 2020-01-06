@@ -181,7 +181,7 @@ function! s:Expand(winnr, dir)
   let l:size = l:hl ? winwidth(a:winnr) : winheight(a:winnr)
   let l:diff = l:hl ? g:win_resize_width : g:win_resize_height
   " Can't currently use relative resizing for the non-active window.
-  " Issue #5443 (https://github.com/vim/vim/issues/5443) 
+  " Issue #5443 (https://github.com/vim/vim/issues/5443)
   execute l:resize_prefix . a:winnr . 'resize ' . (l:size + l:diff)
   for l:winnr in l:sorted_windows
     let l:boundary = l:boundaries[l:winnr]
