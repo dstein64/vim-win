@@ -1,5 +1,4 @@
 " TODO: handle range/count (visual selection)?
-" TODO: autoload
 " TODO: alternative approach for resizing windows (current doesn't always
 " work properly)..
 
@@ -128,6 +127,7 @@ endfunction
 "
 " Difficult use case 2
 " Resizing window 3 by moving its left border left
+" Resizing window 4 by moving its left border left
 "
 "  1 | | | 6
 " ---|4|5|---
