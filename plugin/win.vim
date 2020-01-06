@@ -327,7 +327,8 @@ function! s:AddWindowLabels()
     if l:winnr ==# winnr()
       let l:highlight = 'WinActive'
     endif
-    call add(l:label_winids, s:OpenPopup(l:label, l:highlight, l:row, l:col))
+    let l:label_winid = s:OpenPopup(l:label, l:highlight, l:row, l:col)
+    if l:label_winid !=# 0 | call add(l:label_winids, l:label_winid) | endif
   endfor
   return l:label_winids
 endfunction
