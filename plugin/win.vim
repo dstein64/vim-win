@@ -118,7 +118,6 @@ endfunction
 " TODO: this doesn't currently work.
 function! s:Expand(winnr, dir)
   " TODO: check dir is hjkl and throw error otherwise
-  if winnr(a:dir) ==# a:winnr | return | endif
   let l:hl = a:dir ==# 'h' || a:dir ==# 'l'
   let l:hk = a:dir ==# 'h' || a:dir ==# 'k'
   let l:resize_prefix = l:hl ? 'vertical ' : ''
@@ -144,8 +143,11 @@ function! s:Expand(winnr, dir)
     if l:boundary[a:dir] ==# l:boundaries[a:winnr][a:dir] | break | endif
     execute l:resize_prefix . l:winnr . 'resize ' . l:winmin
   endfor
+  let l:size = l:hl ? winwidth(a:winnr) : winheight(a:winnr)
   let l:diff = l:hl ? g:win_resize_width : g:win_resize_height
-  execute l:resize_prefix . a:winnr . 'resize +' . l:diff
+  " Can't currently use relative resizing for the non-active window.
+  " Issue #5443 (https://github.com/vim/vim/issues/5443) 
+  execute l:resize_prefix . a:winnr . 'resize ' . (l:size + l:diff)
   for l:winnr in l:sorted_windows
     let l:boundary = l:boundaries[l:winnr]
     " TODO: see TODOs in loop above
@@ -168,9 +170,11 @@ function! s:Resize(border, direction)
   if index(l:vertical, a:border) ># -1
         \ && index(l:vertical, a:direction) ==# -1 | return | endif
   let l:winnr = winnr()
-  if a:border ==# a:direction | call s:Expand(l:winnr, a:direction) | endif
-  if winnr(a:border) ==# l:winnr | return | endif
-  call s:Expand(winnr(a:border), a:direction)
+  if a:border ==# a:direction
+    call s:Expand(l:winnr, a:direction)
+  elseif winnr(a:border) !=# l:winnr
+    call s:Expand(winnr(a:border), a:direction)
+  endif
 endfunction
 
 " Swaps the content of the active window with the specified window.
