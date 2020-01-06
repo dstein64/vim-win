@@ -1,7 +1,3 @@
-" ************************************************************
-" * Core
-" ************************************************************
-
 let s:popupwin = has('popupwin')
 let s:floatwin = exists('*nvim_open_win') && exists('*nvim_win_close')
 

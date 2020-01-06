@@ -1,7 +1,3 @@
-" TODO: handle range/count (visual selection)?
-" TODO: alternative approach for resizing windows (current doesn't always
-" work properly)..
-
 if exists('g:loaded_win')
   finish
 endif
@@ -21,7 +17,7 @@ if !exists(':Win')
 endif
 
 " ************************************************************
-" * Configuration
+" * User Configuration
 " ************************************************************
 
 let g:win_resize_height = 2
