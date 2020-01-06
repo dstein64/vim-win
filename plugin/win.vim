@@ -116,9 +116,9 @@ endfunction
 " TODO: add documentation
 " TODO: prefix with s:
 " TODO: this doesn't currently work.
-function! Expand(dir)
+function! s:Expand(winnr, dir)
   " TODO: check dir is hjkl and throw error otherwise
-  if winnr(a:dir) ==# winnr() | return | endif
+  if winnr(a:dir) ==# a:winnr | return | endif
   let l:hl = a:dir ==# 'h' || a:dir ==# 'l'
   let l:hk = a:dir ==# 'h' || a:dir ==# 'k'
   let l:resize_prefix = l:hl ? 'vertical ' : ''
@@ -141,167 +141,36 @@ function! Expand(dir)
     " overlapping rows or columns, but may not matter.
     " TODO does following need inequality? (will have to switch direction
     " conditionally)
-    if l:boundary[a:dir] ==# l:boundaries[winnr()][a:dir] | break | endif
+    if l:boundary[a:dir] ==# l:boundaries[a:winnr][a:dir] | break | endif
     execute l:resize_prefix . l:winnr . 'resize ' . l:winmin
   endfor
   let l:diff = l:hl ? g:win_resize_width : g:win_resize_height
-  execute l:resize_prefix . winnr() . 'resize +' . l:diff
+  execute l:resize_prefix . a:winnr . 'resize +' . l:diff
   for l:winnr in l:sorted_windows
     let l:boundary = l:boundaries[l:winnr]
     " TODO: see TODOs in loop above
     " TODO does following need inequality? (will have to switch direction
     " conditionally)
-    if l:boundary[a:dir] ==# l:boundaries[winnr()][a:dir] | break | endif
+    if l:boundary[a:dir] ==# l:boundaries[a:winnr][a:dir] | break | endif
     let l:upper = l:boundaries[l:winnr][l:hl ? 'l' : 'j']
     let l:lower = l:boundaries[l:winnr][l:hl ? 'h' : 'k']
     execute l:resize_prefix . l:winnr . 'resize ' . (l:upper - l:lower + 1)
   endfor
 endfunction
 
-" Set 'winwidth' and 'winheight' and return existing values in List.
-function! s:SetWinWidthWinHeight(winwidth, winheight)
-  let l:existing = [&winwidth, &winheight]
-  let &winwidth = a:winwidth
-  let &winheight = a:winheight
-  return l:existing
-endfunction
-
-" Moves the bottom border of the active window up (unless on the bottom row).
-function! s:ResizeBottomUp()
-  let l:win_id = win_getid()
-  let l:height = winheight(l:win_id)
-  let [l:winwidth, l:winheight] = s:SetWinWidthWinHeight(1, 1)
-  wincmd j
-  if l:win_id !=# win_getid()
-    call win_gotoid(l:win_id)
-    execute 'resize -' . g:win_resize_height
-    if winheight(l:win_id) ==# l:height
-      wincmd k
-      if l:win_id !=# win_getid()
-        call s:ResizeBottomUp()
-        call win_gotoid(l:win_id)
-        execute 'resize -' . g:win_resize_height
-      endif
-    endif
-  endif
-  call s:SetWinWidthWinHeight(l:winwidth, l:winheight)
-endfunction
-
-" Moves the bottom border of the active window down (unless on the bottom row).
-function! s:ResizeBottomDown()
-  let l:win_id = win_getid()
-  let l:row = win_screenpos(l:win_id)[0]
-  let l:restore = winrestcmd()
-  let [l:winwidth, l:winheight] = s:SetWinWidthWinHeight(1, 1)
-  wincmd j
-  if l:win_id !=# win_getid()
-    call win_gotoid(l:win_id)
-    execute 'resize +' . g:win_resize_height
-  endif
-  if win_screenpos(l:win_id)[0] <# l:row | execute l:restore | endif
-  call s:SetWinWidthWinHeight(l:winwidth, l:winheight)
-endfunction
-
-" Moves the top border of the active window up (unless on the top row).
-function! s:ResizeTopUp()
-  let l:win_id = win_getid()
-  let l:height = winheight(l:win_id)
-  let [l:winwidth, l:winheight] = s:SetWinWidthWinHeight(1, 1)
-  wincmd k
-  if l:win_id !=# win_getid()
-    execute 'resize -' . g:win_resize_height
-    if winheight(l:win_id) ==# l:height
-      call s:ResizeTopUp()
-      execute 'resize -' . g:win_resize_height
-    endif
-    call win_gotoid(l:win_id)
-  endif
-  call s:SetWinWidthWinHeight(l:winwidth, l:winheight)
-endfunction
-
-" Moves the top border of the active window down (unless on the top row).
-function! s:ResizeTopDown()
-  let l:win_id = win_getid()
-  let [l:winwidth, l:winheight] = s:SetWinWidthWinHeight(1, 1)
-  wincmd k
-  if l:win_id !=# win_getid()
-    let l:win_id2 = win_getid()
-    let l:row = win_screenpos(l:win_id2)[0]
-    let l:restore = winrestcmd()
-    execute 'resize +' . g:win_resize_height
-    if win_screenpos(l:win_id2)[0] <# l:row | execute l:restore | endif
-    call win_gotoid(l:win_id)
-  endif
-  call s:SetWinWidthWinHeight(l:winwidth, l:winheight)
-endfunction
-
-" Moves the right border of the active window to the left (unless on the rightmost column).
-function! s:ResizeRightLeft()
-  let l:win_id = win_getid()
-  let l:width = winwidth(l:win_id)
-  let [l:winwidth, l:winheight] = s:SetWinWidthWinHeight(1, 1)
-  wincmd l
-  if l:win_id !=# win_getid()
-    call win_gotoid(l:win_id)
-    execute 'vertical resize -' . g:win_resize_width
-    if winwidth(l:win_id) ==# l:width
-      wincmd h
-      if l:win_id !=# win_getid()
-        call s:ResizeRightLeft()
-        call win_gotoid(l:win_id)
-        execute 'vertical resize -' . g:win_resize_width
-      endif
-    endif
-  endif
-  call s:SetWinWidthWinHeight(l:winwidth, l:winheight)
-endfunction
-
-" Moves the right border of the active window to the left (unless on the rightmost column).
-function! s:ResizeRightRight()
-  let l:win_id = win_getid()
-  let l:col = win_screenpos(l:win_id)[1]
-  let l:restore = winrestcmd()
-  let [l:winwidth, l:winheight] = s:SetWinWidthWinHeight(1, 1)
-  wincmd l
-  if l:win_id !=# win_getid()
-    call win_gotoid(l:win_id)
-    execute 'vertical resize +' . g:win_resize_width
-  endif
-  if win_screenpos(l:win_id)[1] <# l:col | execute l:restore | endif
-  call s:SetWinWidthWinHeight(l:winwidth, l:winheight)
-endfunction
-
-" Moves the left border of the active window to the left (unless on the leftmost column).
-function! s:ResizeLeftLeft()
-  let l:win_id = win_getid()
-  let l:width = winwidth(l:win_id)
-  let [l:winwidth, l:winheight] = s:SetWinWidthWinHeight(1, 1)
-  wincmd h
-  if l:win_id !=# win_getid()
-    execute 'vertical resize -' . g:win_resize_width
-    if winwidth(l:win_id) ==# l:width
-      call s:ResizeLeftLeft()
-      execute 'vertical resize -' . g:win_resize_width
-    endif
-    call win_gotoid(l:win_id)
-  endif
-  call s:SetWinWidthWinHeight(l:winwidth, l:winheight)
-endfunction
-
-" Moves the left border of the active window to the right (unless on the leftmost column).
-function! s:ResizeLeftRight()
-  let l:win_id = win_getid()
-  let [l:winwidth, l:winheight] = s:SetWinWidthWinHeight(1, 1)
-  wincmd h
-  if l:win_id !=# win_getid()
-    let l:win_id2 = win_getid()
-    let l:col = win_screenpos(l:win_id2)[1]
-    let l:restore = winrestcmd()
-    execute 'vertical resize +' . g:win_resize_width
-    if win_screenpos(l:win_id2)[1] <# l:col | execute l:restore | endif
-    call win_gotoid(l:win_id)
-  endif
-  call s:SetWinWidthWinHeight(l:winwidth, l:winheight)
+" Resizes the specified border in the specified direction. hjkl are used to
+" specify both border and direction.
+function! s:Resize(border, direction)
+  let l:horizontal = ['h', 'l']
+  let l:vertical = ['j', 'k']
+  if index(l:horizontal, a:border) ># -1
+        \ && index(l:horizontal, a:direction) ==# -1 | return | endif
+  if index(l:vertical, a:border) ># -1
+        \ && index(l:vertical, a:direction) ==# -1 | return | endif
+  let l:winnr = winnr()
+  if a:border ==# a:direction | call s:Expand(l:winnr, a:direction) | endif
+  if winnr(a:border) ==# l:winnr | return | endif
+  call s:Expand(winnr(a:border), a:direction)
 endfunction
 
 " Swaps the content of the active window with the specified window.
@@ -598,21 +467,21 @@ function! s:Win()
       elseif index(s:right_chars, l:char) !=# -1
         wincmd l
       elseif index(s:shift_left_chars, l:char) !=# -1
-        call s:ResizeRightLeft()
+        call s:Resize('l', 'h')
       elseif index(s:shift_down_chars, l:char) !=# -1
-        call s:ResizeBottomDown()
+        call s:Resize('j', 'j')
       elseif index(s:shift_up_chars, l:char) !=# -1
-        call s:ResizeBottomUp()
+        call s:Resize('j', 'k')
       elseif index(s:shift_right_chars, l:char) !=# -1
-        call s:ResizeRightRight()
+        call s:Resize('l', 'l')
       elseif index(s:control_left_chars, l:char) !=# -1
-        call s:ResizeLeftLeft()
+        call s:Resize('h', 'h')
       elseif index(s:control_down_chars, l:char) !=# -1
-        call s:ResizeTopDown()
+        call s:Resize('k', 'j')
       elseif index(s:control_up_chars, l:char) !=# -1
-        call s:ResizeTopUp()
+        call s:Resize('k', 'k')
       elseif index(s:control_right_chars, l:char) !=# -1
-        call s:ResizeLeftRight()
+        call s:Resize('h', 'l')
       endif
     catch
       call s:Beep()
