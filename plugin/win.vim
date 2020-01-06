@@ -253,8 +253,9 @@ endfunction
 function! s:OpenPopup(text, highlight, row, col)
   let l:winid = 0
   if s:popupwin
-    " A popup cannot start in the last or second to last column. It is placed
+    " A popup cannot start in the last or second-to-last column. It is placed
     " starting in the third to last column.
+    " Issue #5447 (https://github.com/vim/vim/issues/5447)
     if a:col >=# &columns - 1 | return l:winid | endif
     let l:options = {
           \   'highlight': a:highlight,
