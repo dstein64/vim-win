@@ -212,8 +212,10 @@ function! s:Resize(border, direction)
   endif
 endfunction
 
-" Swaps the content of the active window with the specified window.
-" The specified window becomes the active window after swapping.
+" Swaps the buffer of the active window with the buffer of the specified
+" window. The specified window becomes the active window after swapping.
+" Only the buffers are swapped (i.e., local options, mappings, abbreviations,
+" etc., are not transferred).
 function! s:Swap(winnr)
   let l:winnr1 = winnr()
   let l:winnr2 = a:winnr
@@ -415,7 +417,7 @@ function! s:ShowHelp()
         \   '  This shifts the window''s left and top borders.',
         \   '* Enter a window number to change the active window.',
         \   '  Where applicable, press <enter> to submit.',
-        \   '* Press s followed by an hjkl movement key or window number, to swap windows.',
+        \   '* Press s followed by an hjkl movement key or window number, to swap buffers.',
         \   '* Press <esc> to leave vim-win or go back (where applicable).',
         \ ]
   let l:echo_list = []
