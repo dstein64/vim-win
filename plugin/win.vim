@@ -341,7 +341,6 @@ function! s:GetChar()
 endfunction
 
 " Show a popup window and return the window ID (returning 0 if popups are
-" returns 0.
 " unsupported or the popup could not be displayed).
 function! s:OpenPopup(text, highlight, row, col)
   let l:winid = 0
