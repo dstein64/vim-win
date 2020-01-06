@@ -341,14 +341,16 @@ endfunction
 
 function! s:ShowHelp()
   let l:help_lines = [
-        \   '* Use the hjkl movement keys to change the active window.',
-        \   '* Enter a window number to change the active window.',
-        \   '  Where applicable, press <enter> to submit.',
-        \   '* Hold <shift> and use the hjkl movement keys to resize the active window.',
-        \   '  This shifts the window''s right and bottom borders.',
-        \   '* Hold <control> and use the hjkl movement keys to resize the active window.',
-        \   '  This shifts the window''s left and top borders.',
-        \   '* Press s followed by an hjkl movement key or window number, to swap buffers.',
+        \   '* Arrows or hjkl keys can be used for movement.',
+        \   '* There are various ways to change the active window.',
+        \   '  - Use movement keys to move to neighboring windows.',
+        \   '  - Enter a window number (where applicable, press <enter> to submit).',
+        \   '  - Press w to sequentially move to the next window.',
+        \   '* Hold <shift> and use movement keys to resize the active window.',
+        \   '  - This shifts the window''s right and bottom borders.',
+        \   '* Hold <control> and use movement keys to resize the active window.',
+        \   '  - This shifts the window''s left and top borders.',
+        \   '* Press s followed by a movement key or window number, to swap buffers.',
         \   '* Press <esc> to leave vim-win or go back (where applicable).',
         \ ]
   let l:echo_list = []
