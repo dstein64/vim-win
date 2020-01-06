@@ -255,10 +255,12 @@ endfunction
 function! s:OpenPopup(text, highlight, row, col)
   let l:winid = 0
   if s:popupwin
-    " A popup cannot start in the last or second-to-last column. It is placed
-    " starting in the third to last column.
-    " Issue #5447 (https://github.com/vim/vim/issues/5447)
-    if a:col >=# &columns - 1 | return l:winid | endif
+    if a:col >=# (&columns - 1) && !has('patch-8.2.0096')
+      " A popup cannot start in the last or second-to-last column prior to
+      " patch-8.2.0096. It is placed starting in the third-to-last column.
+      " Issue #5447 (https://github.com/vim/vim/issues/5447)
+      return l:winid
+    endif
     let l:options = {
           \   'highlight': a:highlight,
           \   'line': a:row,
