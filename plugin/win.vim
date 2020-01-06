@@ -414,20 +414,32 @@ function! s:Beep()
   execute "normal \<esc>"
 endfunction
 
-function! s:Win()
-  if !has('patch-8.1.1140') && !has('nvim-0.4.3')
-    " Vim 8.1.1140 and nvim-0.4.3 updated the winnr function to take a motion
+" Check vim/nvim version, show corresponding messages, and return a boolean
+" indicating whether check succeeded.
+function! s:CheckVersion()
+  if !has('patch-8.1.1140') && !has('nvim-0.4.0')
+    " Vim 8.1.1140 and nvim-0.4.0 updated the winnr function to take a motion
     " character, functionality utilized by vim-win.
-    call s:ShowError('vim-win requires vim>=8.1.1140 or nvim>=0.4.3')
-    return
+    let l:message_lines = [
+          \   'vim-win requires vim>=8.1.1140 or nvim>=0.4.0.',
+          \   'Use :verbose to check the current version.'
+          \ ]
+    call s:ShowError(join(l:message_lines, "\n"))
+    return 0
   endif
   if !g:win_disable_version_warning && !s:popupwin && !s:floatwin
-    let l:warning_lines = [
+    let l:message_lines = [
           \   'Full vim-win functionality requires vim>=8.2 or nvim>=0.4.0.',
+          \   'Use :verbose to check the current version.',
           \   'Set g:win_disable_version_warning = 1 to disable this warning.'
           \ ]
-    call s:ShowWarning(join(l:warning_lines, "\n"))
+    call s:ShowWarning(join(l:message_lines, "\n"))
   endif
+  return 1
+endfunction
+
+function! s:Win()
+  if !s:CheckVersion() | return | endif
   let l:label_winids = []
   let l:prompt = [
         \   ['WinStar', '*'],
