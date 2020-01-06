@@ -110,6 +110,29 @@ function! s:WindowCount()
   return l:win_count
 endfunction
 
+" The following few functions are for resizing windows. The current approach
+" resizes windows by using a function that expands a window. Various other
+" approaches were attempted (including other approaches for window expansion),
+" but they were found to not handle some specific use-case (e.g., see below).
+"
+" Difficult use case 1
+" Resizing window 5 by moving its top border up
+"
+"   1|3
+"   -|-
+"   2|4
+"   ---
+"    5
+"   ---
+"    6
+"
+" Difficult use case 2
+" Resizing window 3 by moving its left border left
+"
+"  1 | | | 6
+" ---|4|5|---
+" 2|3| | |7|8
+
 " Returns a dictionary with boundaries for the specified window.
 " Dictionary keys correspond to directions hjkl.
 function! s:GetBoundaries(winnr)
