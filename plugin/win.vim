@@ -2,8 +2,7 @@
 " TODO: alternative approach for resizing windows (current doesn't always
 " work properly)..
 
-" Set g:force_load_win = 1 to force load.
-if !get(g:, 'force_load_win', 0) && exists('g:loaded_win')
+if exists('g:loaded_win')
   finish
 endif
 let g:loaded_win = 1
