@@ -22,6 +22,10 @@ if !exists(':Win')
   command Win :call s:Win()
 endif
 
+" ************************************************************
+" * Configuration
+" ************************************************************
+
 let g:win_resize_height = 2
 let g:win_resize_width = 2
 let g:win_disable_version_warning = get(g:, 'win_disable_version_warning', 0)
@@ -61,6 +65,10 @@ highlight default link WinInactive Todo
 highlight default link WinNeighbor Todo
 highlight default link WinStar StatusLine
 highlight default link WinPrompt ModeMsg
+
+" ************************************************************
+" * Core
+" ************************************************************
 
 let s:popupwin = has('popupwin')
 let s:floatwin = exists('*nvim_open_win') && exists('*nvim_win_close')
