@@ -17,6 +17,7 @@ let s:control_left_chars = ["\<c-h>", "\<c-left>"]
 let s:control_down_chars = ["\<c-j>", "\<c-down>"]
 let s:control_up_chars = ["\<c-k>", "\<c-up>"]
 let s:control_right_chars = ["\<c-l>", "\<c-right>"]
+let s:opposite_lookup = {'h': 'l', 'j': 'k', 'k': 'j', 'l': 'h'}
 
 " Returns window count, with special handling to exclude floating and external
 " windows in neovim. The windows with numbers less than or equal to the value
@@ -73,9 +74,9 @@ endfunction
 " ---|4|5|---
 " 2|3| | |7|8
 
-" Returns a dictionary with boundaries for the specified window.
+" Returns a dictionary with the boundary for the specified window.
 " Dictionary keys correspond to directions hjkl.
-function! s:GetBoundaries(winnr)
+function! s:GetBoundary(winnr)
   let [l:k, l:h] = win_screenpos(a:winnr)
   let l:j = l:k + winheight(a:winnr) - 1
   let l:l = l:h + winwidth(a:winnr) - 1
@@ -84,12 +85,24 @@ function! s:GetBoundaries(winnr)
 endfunction
 
 " TODO: documentation
+function! s:GetBoundaries()
+  let l:boundaries = [{}]
+  let l:win_count = s:WindowCount()
+  for l:winnr in range(1, l:win_count)
+    let l:boundary = s:GetBoundary(l:winnr)
+    call add(l:boundaries, l:boundary)
+  endfor
+  return l:boundaries
+endfunction
+
+" TODO: documentation
 function! s:Squash(source)
   let l:winnrs = range(1, s:WindowCount())
   if s:Contains(['h', 'k'], a:source) | call reverse(l:winnrs) | endif
   " Have to resize all windows, not just those on the border. Otherwise, not
-  " all windows would get squashed. For example, Squash('l') wouldn't squash
-  " window 1 below if resize were only called on window 6.
+  " all windows would get squashed. For example, in the figure below,
+  " Squash('l') wouldn't squash window 1 if resize were only called on window
+  " 6.
   "  1|2 | |
   " -----|6|
   " 3|4|5| |
@@ -107,20 +120,59 @@ function! s:Squash(source)
 endfunction
 
 " TODO: documentation
-function s:Expand(winnr, dir)
-  let l:opposite_dir = {'h': 'l', 'j': 'k', 'k': 'j', 'l': 'h'}[a:dir]
+function! s:Compare(l1, l2)
+  let c = 0
+  let idx = 0
+  while 1
+    if len(a:l1) ==# 0 && len(a:l2) ==# 0
+      let c = 0
+      break
+    elseif len(a:l1) ==# 0 && len(a:l2) !=# 0
+      let c = -1
+      break
+    elseif len(a:l1) !=# 0 && len(a:l2) ==# 0
+      let c = 1
+      break
+    endif
+    let c = a:l1[idx] - a:l2[idx]
+    if c !=# 0 | break | endif
+    let idx += 1
+  endwhile
+  return c
+endfunction
+
+" TODO: documentation
+function! s:OrderedWinnrs(dir)
+  let l:boundaries = s:GetBoundaries()
+  let l:lists = []
   let l:win_count = s:WindowCount()
-  let l:boundaries = [{}]
   for l:winnr in range(1, l:win_count)
-    let l:boundary = s:GetBoundaries(l:winnr)
-    call add(l:boundaries, l:boundary)
+    let l:list = []
+    let l:boundary = l:boundaries[l:winnr]
+    let l:sign = s:Contains(['j', 'l'], a:dir) ? -1 : 1
+    call add(l:list, l:boundary[a:dir] * l:sign)
+    call add(l:list, l:boundary[s:opposite_lookup[a:dir]] * l:sign)
+    call add(l:list, l:winnr)
+    call add(l:lists, l:list)
   endfor
+  call sort(l:lists, function('s:Compare'))
+  let l:winnrs = []
+  for l:idx in range(0, len(l:lists) - 1)
+    call add(l:winnrs, l:lists[l:idx][-1])
+  endfor
+  return l:winnrs
+endfunction
+
+" TODO: documentation
+function! s:Expand(winnr, dir)
+  let l:opposite_dir = s:opposite_lookup[a:dir]
+  let l:win_count = s:WindowCount()
+  let l:boundaries = s:GetBoundaries()
   call s:Squash(a:dir)
-  let l:winnrs = range(1, l:win_count)
-  if s:Contains(['j', 'l'], a:dir) | call reverse(l:winnrs) | endif
+  let l:winnrs = s:OrderedWinnrs(a:dir)
   for l:winnr in l:winnrs
     let l:boundary = l:boundaries[l:winnr]
-    let l:tmp_boundary = s:GetBoundaries(l:winnr)
+    let l:tmp_boundary = s:GetBoundary(l:winnr)
     if a:dir ==# 'h' && l:boundary['h'] ==# 0 | continue | endif
     if a:dir ==# 'j' && l:boundary['j'] ==# &lines | continue | endif
     if a:dir ==# 'k' && l:boundary['k'] ==# 0 | continue | endif
