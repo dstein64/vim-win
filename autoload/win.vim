@@ -45,9 +45,9 @@ endfunction
 
 " The following few functions are for resizing windows. The intention is to
 " work similarly to mouse drags of status lines and window separators
-" (window.c: win_drag_vsep_line and win_drag_status_line). As of January 2020,
-" there are no built-in vim commannds nor vimscript functions that have this
-" same behaviour.
+" (window.c: win_drag_vsep_line and win_drag_status_line). As of vim 8.2.0050
+" (December 2019), there are no built-in vim commannds nor vimscript functions
+" that have this same behaviour.
 "
 " The current approach resizes windows by using a function that expands a
 " window. Various other approaches were attempted (including other approaches
