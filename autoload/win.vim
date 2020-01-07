@@ -67,61 +67,59 @@ endfunction
 " ---|4|5|---
 " 2|3| | |7|8
 
-" Returns a dictionary with boundaries for the specified window.
-" Dictionary keys correspond to directions hjkl.
-function! s:GetBoundaries(winnr)
-    let [l:k, l:h] = win_screenpos(a:winnr)
-    let l:j = l:k + winheight(a:winnr) - 1
-    let l:l = l:h + winwidth(a:winnr) - 1
-    let l:boundaries = {'h': l:h, 'j': l:j, 'k': l:k, 'l': l:l}
-    return l:boundaries
+" TODO: documentation
+function! s:Squash(source)
+  let l:winnrs = range(1, s:WindowCount())
+  if s:Contains(['h', 'k'], a:source) | call reverse(l:winnrs) | endif
+  " Have to resize all windows, not just those on the border. Otherwise, not
+  " all windows would get squashed. For example, Squash('l') wouldn't squash
+  " window 1 below if resize were only called on window 6.
+  "  1|2 | |
+  " -----|6|
+  " 3|4|5| |
+  " The ordering used below for resizing works, since "windows are numbered
+  " from top-left to bottom-right" (:h CTRL-W_w).
+  " The following is O(n^2) in the number of windows since the resize
+  " operation loops over windows.
+  for l:winnr in l:winnrs
+    if s:Contains(['h', 'l'], a:source)
+      execute 'vertical ' . l:winnr . 'resize'
+    else
+      execute l:winnr . 'resize'
+    endif
+  endfor
 endfunction
 
-" TODO: take arg specifying which direction to expand and how much
-" TODO: add documentation
-" TODO: prefix with s:
-" TODO: this doesn't currently work.
-function! s:Expand(winnr, dir)
-  " TODO: check dir is hjkl and throw error otherwise
-  let l:hl = a:dir ==# 'h' || a:dir ==# 'l'
-  let l:hk = a:dir ==# 'h' || a:dir ==# 'k'
-  let l:resize_prefix = l:hl ? 'vertical ' : ''
-  let l:winmin = l:hl ? &winminwidth : &winminheight
+" TODO: documentation
+function s:Expand(winnr, dir)
+  let l:opposite_dir = {'h': 'l', 'j': 'k', 'k': 'j', 'l': 'h'}[a:dir]
   let l:win_count = s:WindowCount()
   let l:boundaries = [{}]
   for l:winnr in range(1, l:win_count)
     let l:boundary = s:GetBoundaries(l:winnr)
     call add(l:boundaries, l:boundary)
   endfor
-  let l:sorted_windows = range(1, l:win_count)
-  "TODO (perhaps this should be 'h' in this case for 'l' above (actually
-  "probably not since that might then try to shrink full width windows).
-  let l:Compare = {x, y -> l:boundaries[x][a:dir] - l:boundaries[y][a:dir]}
-  call sort(l:sorted_windows, l:Compare)
-  if l:hk | call reverse(l:sorted_windows) | endif
-  for l:winnr in l:sorted_windows
+  call s:Squash(a:dir)
+  let l:winnrs = range(1, l:win_count)
+  if s:Contains(['j', 'l'], a:dir) | call reverse(l:winnrs) | endif
+  for l:winnr in l:winnrs
     let l:boundary = l:boundaries[l:winnr]
-    " TODO: this can probably be constrained further to windows with
-    " overlapping rows or columns, but may not matter.
-    " TODO does following need inequality? (will have to switch direction
-    " conditionally)
-    if l:boundary[a:dir] ==# l:boundaries[a:winnr][a:dir] | break | endif
-    execute l:resize_prefix . l:winnr . 'resize ' . l:winmin
-  endfor
-  let l:size = l:hl ? winwidth(a:winnr) : winheight(a:winnr)
-  let l:diff = l:hl ? g:win_resize_width : g:win_resize_height
-  " Can't currently use relative resizing for the non-active window.
-  " Issue #5443 (https://github.com/vim/vim/issues/5443)
-  execute l:resize_prefix . a:winnr . 'resize ' . (l:size + l:diff)
-  for l:winnr in l:sorted_windows
-    let l:boundary = l:boundaries[l:winnr]
-    " TODO: see TODOs in loop above
-    " TODO does following need inequality? (will have to switch direction
-    " conditionally)
-    if l:boundary[a:dir] ==# l:boundaries[a:winnr][a:dir] | break | endif
-    let l:upper = l:boundaries[l:winnr][l:hl ? 'l' : 'j']
-    let l:lower = l:boundaries[l:winnr][l:hl ? 'h' : 'k']
-    execute l:resize_prefix . l:winnr . 'resize ' . (l:upper - l:lower + 1)
+    let l:tmp_boundary = s:GetBoundaries(l:winnr)
+    if a:dir ==# 'h' && l:boundary['h'] ==# 0 | continue | endif
+    if a:dir ==# 'j' && l:boundary['j'] ==# &lines | continue | endif
+    if a:dir ==# 'k' && l:boundary['k'] ==# 0 | continue | endif
+    if a:dir ==# 'l' && l:boundary['l'] ==# &columns | continue | endif
+    " Use a fixed size for resizing, as opposed to +/- relative resizing,
+    " which does not work as expected.
+    " Issue #5443 (https://github.com/vim/vim/issues/5443)
+    let l:size = abs(l:boundary[a:dir] - l:tmp_boundary[l:opposite_dir]) + 1
+    if s:Contains(['h', 'l'], a:dir)
+      if l:winnr ==# a:winnr | let l:size += g:win_resize_width | endif
+      if l:size ># winwidth(l:winnr) | execute 'vertical ' . l:winnr . 'resize ' . l:size | endif
+    else
+      if l:winnr ==# a:winnr | let l:size += g:win_resize_height | endif
+      if l:size ># winheight(l:winnr) | execute l:winnr . 'resize ' . l:size | endif
+    endif
   endfor
 endfunction
 
@@ -227,7 +225,7 @@ function! s:ClosePopup(winid)
   elseif s:floatwin
     " Keep track of available floatwin buffer numbers, so they can be reused.
     " This prevents the buffer list numbers from getting high from usage of
-    " vim-win. This is list is used by OpenPopup.
+    " vim-win. This list is used by OpenPopup.
     if !has_key(s:, 'floatwin_avail_bufnrs')
       let s:floatwin_avail_bufnrs = []
     endif
@@ -417,10 +415,10 @@ function! s:Init()
         \   'winwidth': &winwidth,
         \   'winheight': &winheight
         \ }
-  " Set winwidth=1 and winheight=1 so that moving around doesn't unepectedly
+  " Minimize winwidth and winheight so that moving around doesn't unexpectedly
   " cause window resizing.
-  set winwidth=1
-  set winwidth=1
+  let &winwidth = max([1, &winminwidth])
+  let &winheight = max([1, &winminheight])
   return l:state
 endfunction
 
