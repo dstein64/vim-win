@@ -177,6 +177,17 @@ function! s:OrderedWinnrs(dir)
 endfunction
 
 " TODO: documentation
+function! s:OnEdge(winnr, dir)
+  let l:boundary = s:GetBoundary(a:winnr)
+  let l:on_edge = 0
+  if a:dir ==# 'h' && l:boundary['h'] ==# 1 | let l:on_edge = 1 | endif
+  if a:dir ==# 'j' && l:boundary['j'] ==# &lines | let l:on_edge = 1 | endif
+  if a:dir ==# 'k' && l:boundary['k'] ==# 1 | let l:on_edge = 1 | endif
+  if a:dir ==# 'l' && l:boundary['l'] ==# &columns | let l:on_edge = 1 | endif
+  return l:on_edge
+endfunction
+
+" TODO: documentation
 function! s:Expand(winnr, dir)
   let l:opposite_dir = s:opposite_lookup[a:dir]
   let l:win_count = s:WindowCount()
@@ -184,12 +195,9 @@ function! s:Expand(winnr, dir)
   call s:Squash(a:dir)
   let l:winnrs = s:OrderedWinnrs(a:dir)
   for l:winnr in l:winnrs
+    if s:OnEdge(l:winnr, a:dir) | continue | endif
     let l:boundary = l:boundaries[l:winnr]
     let l:tmp_boundary = s:GetBoundary(l:winnr)
-    if a:dir ==# 'h' && l:boundary['h'] ==# 0 | continue | endif
-    if a:dir ==# 'j' && l:boundary['j'] ==# &lines | continue | endif
-    if a:dir ==# 'k' && l:boundary['k'] ==# 0 | continue | endif
-    if a:dir ==# 'l' && l:boundary['l'] ==# &columns | continue | endif
     " Use a fixed size for resizing, as opposed to +/- relative resizing,
     " which does not work as expected.
     " Issue #5443 (https://github.com/vim/vim/issues/5443)
