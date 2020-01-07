@@ -81,7 +81,7 @@ example.
 ```vim
 let g:win_resize_height = 3
 let g:win_resize_width = 4
-let g:win_disable_version_warning
+let g:win_disable_version_warning = 1
 let g:win_ext_command_map = {
       \   'c': 'wincmd c',
       \   'C': 'close!',
