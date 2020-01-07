@@ -124,6 +124,8 @@ highlight WinInactive term=bold ctermfg=12 ctermbg=159 guifg=Blue guibg=LightCya
 
 ## Demo
 
+<img src="https://github.com/dstein64/vim-win/blob/master/screencast.png?raw=true" width="800"/>
+
 License
 -------
 
