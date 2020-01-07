@@ -42,16 +42,17 @@ Use one of the following package managers:
 Enter `vim-win` with `<leader>w` or `:Win`. These can be customized (see
 *Configuration* below).
 
-* Arrows or hjkl keys are used for movement.
+* Arrows or `hjkl` keys are used for movement.
 * There are various ways to change the active window.
   - Use movement keys to move to neighboring windows.
-  - Enter a window number (where applicable, press <enter> to submit).
-  - Press w to sequentially move to the next window.
-* Hold <shift> and use movement keys to resize the active window.
-  - Left movements decrease width and right movements increase width.
-  - Down movements decrease height and up movements increase height.
-* Press s followed by a movement key or window number, to swap buffers.
-* Press <esc> to leave vim-win or go back (where applicable).
+  - Enter a window number (where applicable, press `<enter>` to submit).
+  - Press `w` to sequentially move to the next window.
+* Hold `<shift>` and use movement keys to resize the active window.
+  - *Left* movements decrease width and *right* movements increase width.
+  - *Down* movements decrease height and *up* movements increase height.
+* Press `s` followed by a movement key or window number, to swap buffers.
+* Press `?` to show a help message.
+* Press `<esc>` to leave `vim-win` or go back (where applicable).
 
 ## Configuration
 
