@@ -245,7 +245,7 @@ function! s:ShowHelp()
         \   '  - Press w to sequentially move to the next window.',
         \   '* Hold <shift> and use movement keys to resize the active window.',
         \   '  - Left movements decrease width and right movements increase width.',
-        \   '  - Down movements decrease height and up movements increase width.',
+        \   '  - Down movements decrease height and up movements increase height.',
         \   '* Press s followed by a movement key or window number, to swap buffers.',
         \   '* Press <esc> to leave vim-win or go back (where applicable).',
         \ ]
