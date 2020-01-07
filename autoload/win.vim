@@ -370,9 +370,9 @@ function! win#Win()
       elseif s:Contains(s:right_chars, l:char)
         wincmd l
       elseif s:Contains(s:shift_left_chars, l:char)
-        execute g:win_resize_height ' wincmd <'
+        execute g:win_resize_width ' wincmd <'
       elseif s:Contains(s:shift_right_chars, l:char)
-        execute g:win_resize_height ' wincmd >'
+        execute g:win_resize_width ' wincmd >'
       elseif s:Contains(s:shift_up_chars, l:char)
         execute g:win_resize_height ' wincmd +'
       elseif s:Contains(s:shift_down_chars, l:char)
