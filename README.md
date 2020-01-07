@@ -1,8 +1,6 @@
 # vim-win
 
-## Description
-
-This is a Vim plugin for managing windows in Vim. Built-in functionality
+`vim-win` is a Vim plugin for managing windows in Vim. Built-in functionality
 includes window selection, window buffer swapping, and window resizing. The
 plugin is extensible, allowing additional functionality to be added (see
 *Configuration* below).
