@@ -1,13 +1,13 @@
 # vim-win
 
-<img src="https://github.com/dstein64/vim-win/blob/master/screenshot.png?raw=true" width="800"/>
-
 ## Description
 
 This is a Vim plugin for managing windows in Vim. Built-in functionality
 includes window selection, window buffer swapping, and window resizing. The
 plugin is extensible, allowing additional functionality to be added (see
 *Configuration* below).
+
+<img src="https://github.com/dstein64/vim-win/blob/master/screenshot.png?raw=true" width="800"/>
 
 ## Requirements
 
