@@ -290,7 +290,7 @@ function! s:CheckVersion()
     " character, functionality utilized by vim-win.
     let l:message_lines = [
           \   'vim-win requires vim>=8.1.1140 or nvim>=0.4.0.',
-          \   'Use :verbose to check the current version.'
+          \   'Use :version to check the current version.'
           \ ]
     call s:ShowError(join(l:message_lines, "\n"))
     return 0
@@ -298,7 +298,7 @@ function! s:CheckVersion()
   if !g:win_disable_version_warning && !s:popupwin && !s:floatwin
     let l:message_lines = [
           \   'Full vim-win functionality requires vim>=8.2 or nvim>=0.4.0.',
-          \   'Use :verbose to check the current version.',
+          \   'Use :version to check the current version.',
           \   'Set g:win_disable_version_warning = 1 to disable this warning.'
           \ ]
     call s:ShowWarning(join(l:message_lines, "\n"))
