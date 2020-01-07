@@ -150,6 +150,18 @@ function! s:OrderedWinnrs(dir)
     let l:list = []
     let l:boundary = l:boundaries[l:winnr]
     let l:sign = s:Contains(['j', 'l'], a:dir) ? -1 : 1
+    " When shifting right or down, move the bigger windows earlier. This is
+    " because windows seemingly grow relative to their parent (and the larger
+    " windows would be parents) when shifting right or down. Without this, in
+    " the example below, shifting window 1's right border to the right results in windows 4's width collapsing.
+    "    | 2
+    "   1|---
+    "    |3|4
+    if a:dir ==# 'l'
+      call add(l:list, -winheight(l:winnr))
+    elseif a:dir ==# 'j'
+      call add(l:list, -winwidth(l:winnr))
+    endif
     call add(l:list, l:boundary[a:dir] * l:sign)
     call add(l:list, l:boundary[s:opposite_lookup[a:dir]] * l:sign)
     call add(l:list, l:winnr)
