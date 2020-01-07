@@ -42,10 +42,16 @@ function! s:Contains(list, element)
   return index(a:list, a:element) !=# -1
 endfunction
 
-" The following few functions are for resizing windows. The current approach
-" resizes windows by using a function that expands a window. Various other
-" approaches were attempted (including other approaches for window expansion),
-" but they were found to not handle some specific use-case (e.g., see below).
+" The following few functions are for resizing windows. The intention is to
+" work similarly to mouse drags of status lines and window separators
+" (window.c: win_drag_vsep_line and win_drag_status_line). As of January 2020,
+" there are no built-in vim commannds nor vimscript functions that have this
+" same behaviour.
+"
+" The current approach resizes windows by using a function that expands a
+" window. Various other approaches were attempted (including other approaches
+" for window expansion), but they were found to not handle some specific
+" use-case (e.g., see below).
 "
 " * Difficult use case 1
 "   - Resizing window 5 by moving its top border up
@@ -66,6 +72,16 @@ endfunction
 "  1 | | | 6
 " ---|4|5|---
 " 2|3| | |7|8
+
+" Returns a dictionary with boundaries for the specified window.
+" Dictionary keys correspond to directions hjkl.
+function! s:GetBoundaries(winnr)
+  let [l:k, l:h] = win_screenpos(a:winnr)
+  let l:j = l:k + winheight(a:winnr) - 1
+  let l:l = l:h + winwidth(a:winnr) - 1
+  let l:boundaries = {'h': l:h, 'j': l:j, 'k': l:k, 'l': l:l}
+  return l:boundaries
+endfunction
 
 " TODO: documentation
 function! s:Squash(source)
