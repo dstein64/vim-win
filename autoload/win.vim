@@ -238,7 +238,7 @@ endfunction
 
 function! s:ShowHelp()
   let l:help_lines = [
-        \   '* Arrows or hjkl keys can be used for movement.',
+        \   '* Arrows or hjkl keys are used for movement.',
         \   '* There are various ways to change the active window.',
         \   '  - Use movement keys to move to neighboring windows.',
         \   '  - Enter a window number (where applicable, press <enter> to submit).',

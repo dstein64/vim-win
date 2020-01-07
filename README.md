@@ -1,10 +1,13 @@
 # vim-win
 
+<img src="https://github.com/dstein64/vim-win/blob/master/screenshot.png?raw=true" width="800"/>
+
 ## Description
 
-This is a Vim plugin for managing windows in Vim. Built-in functionality includes window
-selection, window buffer swapping, and window resizing. The plugin is extensible, allowing
-additional functionality to be added (see *Configuration* below).
+This is a Vim plugin for managing windows in Vim. Built-in functionality
+includes window selection, window buffer swapping, and window resizing. The
+plugin is extensible, allowing additional functionality to be added (see
+*Configuration* below).
 
 ## Requirements
 
@@ -36,9 +39,10 @@ Use one of the following package managers:
 
 ## Usage
 
-Enter `vim-win` with `<leader>w` or `:Win`. These can be customized (see *Configuration* below).
+Enter `vim-win` with `<leader>w` or `:Win`. These can be customized (see
+*Configuration* below).
 
-* Arrows or hjkl keys can be used for movement.
+* Arrows or hjkl keys are used for movement.
 * There are various ways to change the active window.
   - Use movement keys to move to neighboring windows.
   - Enter a window number (where applicable, press <enter> to submit).
@@ -51,8 +55,8 @@ Enter `vim-win` with `<leader>w` or `:Win`. These can be customized (see *Config
 
 ## Configuration
 
-By default, `vim-win` is started with `<leader>w` or `:Win`. These will not be clobbered in case
-they are already used.
+By default, `vim-win` is started with `<leader>w` or `:Win`. These will not be
+clobbered in case they are already used.
 
 ```vim
 " The following defaults can be customized in your .vimrc
@@ -67,11 +71,13 @@ The following variables can be used to customize the behavior of `vim-win`.
 | `g:win_resize_height`           | `2`     | Number of rows to shift when resizing    |
 | `g:win_resize_width`            | `2`     | Number of columns to shift when resizing |
 | `g:win_disable_version_warning` | `0`     | Set to 1 to disable the version warning  |
-| `g:win_ext_command_map`         | `{}`    | A dictionary for extending `vim-win`.     |
+| `g:win_ext_command_map`         | `{}`    | A dictionary for extending `vim-win`     |
 
-The `g:win_ext_command_map` maps `vim-win` command keys to `vim` command strings.
+The `g:win_ext_command_map` maps `vim-win` command keys to `vim` command
+strings.
 
-The variables can be customized in your `.vimrc`, as shown in the following example.
+The variables can be customized in your `.vimrc`, as shown in the following
+example.
 
 ```vim
 let g:win_resize_height = 3
@@ -98,15 +104,16 @@ let g:win_ext_command_map = {
 
 The following highlight groups can be configured to change `vim-win`'s colors.
 
-| Name        | Default    | Description                               |
-|-------------|------------|-------------------------------------------|
-| WinActive   | DiffAdd    | Color for the *active window* label       |
-| WinInactive | Todo       | Color for *inactive window* labels        |
-| WinNeighbor | Todo       | Color for *neighbor window* labels        |
-| WinStar     | StatusLine | Color for `*` in `vim-win` command prompt |
-| WinPrompt   | ModeMsg    | Color for the command prompt text         |
+| Name          | Default      | Description                               |
+|---------------|--------------|-------------------------------------------|
+| `WinActive`   | `DiffAdd`    | Color for the *active window* label       |
+| `WinInactive` | `Todo`       | Color for *inactive window* labels        |
+| `WinNeighbor` | `Todo`       | Color for *neighbor window* labels        |
+| `WinStar`     | `StatusLine` | Color for `*` in `vim-win` command prompt |
+| `WinPrompt`   | `ModeMsg`    | Color for the command prompt text         |
 
-The highlight groups can be customized in your `.vimrc`, as shown in the following example.
+The highlight groups can be customized in your `.vimrc`, as shown in the
+following example.
 
 ```vim
 " Link WinActive highlight to Error highlight
