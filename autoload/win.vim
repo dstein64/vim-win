@@ -47,8 +47,8 @@ endfunction
 " approaches were attempted (including other approaches for window expansion),
 " but they were found to not handle some specific use-case (e.g., see below).
 "
-" Difficult use case 1
-" Resizing window 5 by moving its top border up
+" * Difficult use case 1
+"   - Resizing window 5 by moving its top border up
 "
 "   1|3
 "   -|-
@@ -58,9 +58,10 @@ endfunction
 "   ---
 "    6
 "
-" Difficult use case 2
-" Resizing window 3 by moving its left border left
-" Resizing window 4 by moving its left border left
+" * Difficult use case 2
+"   - Resizing window 3 by moving its left border left
+"   - Resizing window 4 by moving its left border left
+"   - Resizing window 7 by moving its left border right
 "
 "  1 | | | 6
 " ---|4|5|---
