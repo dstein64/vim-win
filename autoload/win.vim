@@ -153,7 +153,8 @@ function! s:OrderedWinnrs(dir)
     " When shifting right or down, move the bigger windows earlier. This is
     " because windows seemingly grow relative to their parent (and the larger
     " windows would be parents) when shifting right or down. Without this, in
-    " the example below, shifting window 1's right border to the right results in windows 4's width collapsing.
+    " the example below, shifting window 1's right border to the right results
+    " in windows 4's width collapsing.
     "    | 2
     "   1|---
     "    |3|4
