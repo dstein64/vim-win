@@ -13,11 +13,6 @@ let s:shift_left_chars = ['H', "\<s-left>"]
 let s:shift_down_chars = ['J', "\<s-down>"]
 let s:shift_up_chars = ['K', "\<s-up>"]
 let s:shift_right_chars = ['L', "\<s-right>"]
-let s:control_left_chars = ["\<c-h>", "\<c-left>"]
-let s:control_down_chars = ["\<c-j>", "\<c-down>"]
-let s:control_up_chars = ["\<c-k>", "\<c-up>"]
-let s:control_right_chars = ["\<c-l>", "\<c-right>"]
-let s:opposite_lookup = {'h': 'l', 'j': 'k', 'k': 'j', 'l': 'h'}
 
 " Returns window count, with special handling to exclude floating and external
 " windows in neovim. The windows with numbers less than or equal to the value
@@ -41,192 +36,6 @@ endfunction
 
 function! s:Contains(list, element)
   return index(a:list, a:element) !=# -1
-endfunction
-
-" The following few functions are for resizing windows. The intention is to
-" work similarly to mouse drags of status lines and window separators
-" (window.c: win_drag_vsep_line and win_drag_status_line). As of vim 8.2.0050
-" (December 2019), there are no built-in vim commannds nor vimscript functions
-" that have this same behaviour.
-"
-" The current approach resizes windows by using a function that expands a
-" window. Various other approaches were attempted (including other approaches
-" for window expansion), but they were found to not handle some specific
-" use-case (e.g., see below).
-"
-" * Difficult use case 1
-"   - Resizing window 5 by moving its top border up
-"
-"   1|3
-"   -|-
-"   2|4
-"   ---
-"    5
-"   ---
-"    6
-"
-" * Difficult use case 2
-"   - Resizing window 3 by moving its left border left
-"   - Resizing window 4 by moving its left border left
-"   - Resizing window 7 by moving its left border right
-"
-"  1 | | | 6
-" ---|4|5|---
-" 2|3| | |7|8
-
-" Returns a dictionary with the boundary for the specified window.
-" Dictionary keys correspond to directions hjkl.
-function! s:GetBoundary(winnr)
-  let [l:k, l:h] = win_screenpos(a:winnr)
-  let l:j = l:k + winheight(a:winnr) - 1
-  let l:l = l:h + winwidth(a:winnr) - 1
-  let l:boundaries = {'h': l:h, 'j': l:j, 'k': l:k, 'l': l:l}
-  return l:boundaries
-endfunction
-
-" TODO: documentation
-function! s:GetBoundaries()
-  let l:boundaries = [{}]
-  let l:win_count = s:WindowCount()
-  for l:winnr in range(1, l:win_count)
-    let l:boundary = s:GetBoundary(l:winnr)
-    call add(l:boundaries, l:boundary)
-  endfor
-  return l:boundaries
-endfunction
-
-" TODO: documentation
-function! s:Squash(source)
-  let l:winnrs = range(1, s:WindowCount())
-  if s:Contains(['h', 'k'], a:source) | call reverse(l:winnrs) | endif
-  " Have to resize all windows, not just those on the border. Otherwise, not
-  " all windows would get squashed. For example, in the figure below,
-  " Squash('l') wouldn't squash window 1 if resize were only called on window
-  " 6.
-  "  1|2 | |
-  " -----|6|
-  " 3|4|5| |
-  " The ordering used below for resizing works, since "windows are numbered
-  " from top-left to bottom-right" (:h CTRL-W_w).
-  " The following is O(n^2) in the number of windows since the resize
-  " operation loops over windows.
-  for l:winnr in l:winnrs
-    if s:Contains(['h', 'l'], a:source)
-      execute 'vertical ' . l:winnr . 'resize'
-    else
-      execute l:winnr . 'resize'
-    endif
-  endfor
-endfunction
-
-" TODO: documentation
-function! s:Compare(l1, l2)
-  let c = 0
-  let idx = 0
-  while 1
-    if len(a:l1) ==# 0 && len(a:l2) ==# 0
-      let c = 0
-      break
-    elseif len(a:l1) ==# 0 && len(a:l2) !=# 0
-      let c = -1
-      break
-    elseif len(a:l1) !=# 0 && len(a:l2) ==# 0
-      let c = 1
-      break
-    endif
-    let c = a:l1[idx] - a:l2[idx]
-    if c !=# 0 | break | endif
-    let idx += 1
-  endwhile
-  return c
-endfunction
-
-" TODO: documentation
-function! s:OrderedWinnrs(dir)
-  let l:boundaries = s:GetBoundaries()
-  let l:lists = []
-  let l:win_count = s:WindowCount()
-  for l:winnr in range(1, l:win_count)
-    let l:list = []
-    let l:boundary = l:boundaries[l:winnr]
-    let l:sign = s:Contains(['j', 'l'], a:dir) ? -1 : 1
-    " When shifting right or down, move the bigger windows earlier. This is
-    " because windows seemingly grow relative to their parent (and the larger
-    " windows would be parents) when shifting right or down. Without this, in
-    " the example below, shifting window 1's right border to the right results
-    " in windows 4's width collapsing.
-    "    | 2
-    "   1|---
-    "    |3|4
-    if a:dir ==# 'l'
-      call add(l:list, -winheight(l:winnr))
-    elseif a:dir ==# 'j'
-      call add(l:list, -winwidth(l:winnr))
-    endif
-    call add(l:list, l:boundary[a:dir] * l:sign)
-    call add(l:list, l:boundary[s:opposite_lookup[a:dir]] * l:sign)
-    call add(l:list, l:winnr)
-    call add(l:lists, l:list)
-  endfor
-  call sort(l:lists, function('s:Compare'))
-  let l:winnrs = []
-  for l:idx in range(0, len(l:lists) - 1)
-    call add(l:winnrs, l:lists[l:idx][-1])
-  endfor
-  return l:winnrs
-endfunction
-
-" TODO: documentation
-function! s:OnEdge(winnr, dir)
-  let l:boundary = s:GetBoundary(a:winnr)
-  let l:on_edge = 0
-  if a:dir ==# 'h' && l:boundary['h'] ==# 1 | let l:on_edge = 1 | endif
-  if a:dir ==# 'j' && l:boundary['j'] ==# &lines | let l:on_edge = 1 | endif
-  if a:dir ==# 'k' && l:boundary['k'] ==# 1 | let l:on_edge = 1 | endif
-  if a:dir ==# 'l' && l:boundary['l'] ==# &columns | let l:on_edge = 1 | endif
-  return l:on_edge
-endfunction
-
-" TODO: documentation
-function! s:Expand(winnr, dir)
-  let l:opposite_dir = s:opposite_lookup[a:dir]
-  let l:win_count = s:WindowCount()
-  let l:boundaries = s:GetBoundaries()
-  call s:Squash(a:dir)
-  let l:winnrs = s:OrderedWinnrs(a:dir)
-  for l:winnr in l:winnrs
-    if s:OnEdge(l:winnr, a:dir) | continue | endif
-    let l:boundary = l:boundaries[l:winnr]
-    let l:tmp_boundary = s:GetBoundary(l:winnr)
-    " Use a fixed size for resizing, as opposed to +/- relative resizing,
-    " which does not work as expected.
-    " Issue #5443 (https://github.com/vim/vim/issues/5443)
-    let l:size = abs(l:boundary[a:dir] - l:tmp_boundary[l:opposite_dir]) + 1
-    if s:Contains(['h', 'l'], a:dir)
-      if l:winnr ==# a:winnr | let l:size += g:win_resize_width | endif
-      if l:size ># winwidth(l:winnr) | execute 'vertical ' . l:winnr . 'resize ' . l:size | endif
-    else
-      if l:winnr ==# a:winnr | let l:size += g:win_resize_height | endif
-      if l:size ># winheight(l:winnr) | execute l:winnr . 'resize ' . l:size | endif
-    endif
-  endfor
-endfunction
-
-" Resizes the specified border in the specified direction. hjkl are used to
-" specify both border and direction.
-function! s:Resize(border, direction)
-  let l:horizontal = ['h', 'l']
-  let l:vertical = ['j', 'k']
-  if s:Contains(l:horizontal, a:border)
-        \ && !s:Contains(l:horizontal, a:direction) | return | endif
-  if s:Contains(l:vertical, a:border)
-        \ && !s:Contains(l:vertical, a:direction) | return | endif
-  let l:winnr = winnr()
-  if a:border ==# a:direction && l:winnr !=# winnr(a:direction)
-    call s:Expand(l:winnr, a:direction)
-  elseif winnr(a:border) !=# l:winnr
-    call s:Expand(winnr(a:border), a:direction)
-  endif
 endfunction
 
 " Swaps the buffer of the active window with the buffer of the specified
@@ -435,9 +244,8 @@ function! s:ShowHelp()
         \   '  - Enter a window number (where applicable, press <enter> to submit).',
         \   '  - Press w to sequentially move to the next window.',
         \   '* Hold <shift> and use movement keys to resize the active window.',
-        \   '  - This shifts the window''s right and bottom borders.',
-        \   '* Hold <control> and use movement keys to resize the active window.',
-        \   '  - This shifts the window''s left and top borders.',
+        \   '  - Left movements decrease width and right movements increase width.',
+        \   '  - Down movements decrease height and up movements increase width.',
         \   '* Press s followed by a movement key or window number, to swap buffers.',
         \   '* Press <esc> to leave vim-win or go back (where applicable).',
         \ ]
@@ -562,21 +370,13 @@ function! win#Win()
       elseif s:Contains(s:right_chars, l:char)
         wincmd l
       elseif s:Contains(s:shift_left_chars, l:char)
-        call s:Resize('l', 'h')
-      elseif s:Contains(s:shift_down_chars, l:char)
-        call s:Resize('j', 'j')
-      elseif s:Contains(s:shift_up_chars, l:char)
-        call s:Resize('j', 'k')
+        execute g:win_resize_height ' wincmd <'
       elseif s:Contains(s:shift_right_chars, l:char)
-        call s:Resize('l', 'l')
-      elseif s:Contains(s:control_left_chars, l:char)
-        call s:Resize('h', 'h')
-      elseif s:Contains(s:control_down_chars, l:char)
-        call s:Resize('k', 'j')
-      elseif s:Contains(s:control_up_chars, l:char)
-        call s:Resize('k', 'k')
-      elseif s:Contains(s:control_right_chars, l:char)
-        call s:Resize('h', 'l')
+        execute g:win_resize_height ' wincmd >'
+      elseif s:Contains(s:shift_up_chars, l:char)
+        execute g:win_resize_height ' wincmd +'
+      elseif s:Contains(s:shift_down_chars, l:char)
+        execute g:win_resize_height ' wincmd -'
       endif
     catch
       call s:Beep()
