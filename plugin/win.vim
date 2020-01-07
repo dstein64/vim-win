@@ -13,7 +13,7 @@ noremap <silent> <script> <Plug>WinWin <SID>Win
 noremap <SID>Win :<c-u>call win#Win()<cr>
 
 if !exists(':Win')
-  command Win :call s:Win()
+  command Win :call win#Win()
 endif
 
 " ************************************************************
