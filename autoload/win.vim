@@ -410,6 +410,24 @@ function! s:CheckVersion()
   return 1
 endfunction
 
+" Returns a state that can be used for restoration.
+function! s:Init()
+  let l:state = {
+        \   'winwidth': &winwidth,
+        \   'winheight': &winheight
+        \ }
+  " Set winwidth=1 and winheight=1 so that moving around doesn't unepectedly
+  " cause window resizing.
+  set winwidth=1
+  set winwidth=1
+  return l:state
+endfunction
+
+function! s:Restore(state)
+  let &winwidth = a:state['winwidth']
+  let &winheight = a:state['winheight']
+endfunction
+
 function! win#Win()
   if !s:CheckVersion() | return | endif
   let l:label_winids = []
@@ -419,6 +437,7 @@ function! win#Win()
         \   ['WinPrompt', 'vim-win'],
         \   ['None', '> ']
         \ ]
+  let l:state = s:Init()
   while 1
     try
       if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
@@ -479,5 +498,6 @@ function! win#Win()
     endtry
   endwhile
   call s:RemoveWindowLabels(l:label_winids)
+  call s:Restore(l:state)
   redraw | echo ''
 endfunction
