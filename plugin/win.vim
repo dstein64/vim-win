@@ -7,9 +7,9 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 if !hasmapto('<Plug>WinWin')
-  map <leader>w <Plug>WinWin
+  map <unique> <leader>w <Plug>WinWin
 endif
-noremap <silent> <script> <Plug>WinWin <SID>Win
+noremap <unique> <silent> <script> <Plug>WinWin <SID>Win
 noremap <SID>Win :<c-u>call win#Win()<cr>
 
 if !exists(':Win')
