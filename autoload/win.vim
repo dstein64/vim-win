@@ -324,7 +324,9 @@ function! s:Restore(state)
   let &winheight = a:state['winheight']
 endfunction
 
-function! win#Win()
+" Runs the vim-win command prompt loop. The function takes an optional
+" argument specifying how many times to run (runs until exiting by default).
+function! win#Win(...)
   if !s:CheckVersion() | return | endif
   let l:label_winids = []
   let l:prompt = [
@@ -334,7 +336,10 @@ function! win#Win()
         \   ['None', '> ']
         \ ]
   let l:state = s:Init()
-  while 1
+  let l:max_reps = str2nr(get(a:, 1, '0'))
+  let l:reps = 0
+  while l:max_reps <=# 0 || l:reps <# l:max_reps
+    let l:reps += 1
     try
       if &buftype ==# 'nofile' && bufname('%') ==# '[Command Line]'
         call s:Beep()

@@ -6,14 +6,14 @@ let g:loaded_win = 1
 let s:save_cpo = &cpo
 set cpo&vim
 
-if !hasmapto('<Plug>WinWin')
-  map <unique> <leader>w <Plug>WinWin
+if !hasmapto('<plug>WinWin')
+  silent! map <unique> <leader>w <plug>WinWin
 endif
-noremap <unique> <silent> <script> <Plug>WinWin <SID>Win
-noremap <SID>Win :<c-u>call win#Win()<cr>
+noremap <unique> <silent> <script> <plug>WinWin <sid>Win
+noremap <sid>Win :<c-u>call win#Win()<cr>
 
 if !exists(':Win')
-  command Win :call win#Win()
+  command -nargs=* Win :call win#Win(<f-args>)
 endif
 
 " ************************************************************

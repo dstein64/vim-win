@@ -56,7 +56,10 @@ Enter `vim-win` with `<leader>w` or `:Win`. These can be customized (see
 ## Configuration
 
 By default, `vim-win` is started with `<leader>w` or `:Win`. These will not be
-clobbered in case they are already used.
+clobbered in case they are already used. The `:Win` command takes an optional
+argument specifying how many `vim-win` commands to run (e.g., `:Win 1` would
+exit `vim-win` after the first command). If the optional argument is `0`, which
+is the default, `vim-win` runs until exit.
 
 ```vim
 " The following defaults can be customized in your .vimrc
