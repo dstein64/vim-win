@@ -44,7 +44,8 @@ Enter `vim-win` with `<leader>w` or `:Win`. These can be customized (see
 * There are various ways to change the active window.
   - Use movement keys to move to neighboring windows.
   - Enter a window number (where applicable, press `<enter>` to submit).
-  - Press `w` to sequentially move to the next window.
+  - Use `w` or `W` to sequentially move to the next or previous window.
+
 * Hold `<shift>` and use movement keys to resize the active window.
   - *Left* movements decrease width and *right* movements increase width.
   - *Down* movements decrease height and *up* movements increase height.
