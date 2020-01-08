@@ -346,12 +346,13 @@ function! win#Win()
       call s:Echo(l:prompt)
       let l:char = s:GetChar()
       let l:code = char2nr(l:char)
-      if s:Contains(s:esc_chars, l:char)
+      let l:ext_command = get(g:win_ext_command_map, l:char, '')
+      if s:Contains(s:esc_chars, l:char) || l:ext_command ==# 'Win#exit'
         break
       elseif l:char ==# '?'
         call s:ShowHelp()
       elseif has_key(g:win_ext_command_map, l:char)
-        execute g:win_ext_command_map[l:char]
+        execute l:ext_command
       elseif l:char ==# 'w'
         wincmd w
       elseif l:char ==# 'W'

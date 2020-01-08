@@ -26,7 +26,8 @@ let g:win_disable_version_warning = get(g:, 'win_disable_version_warning', 0)
 " g:win_ext_command_map allows additional commands to be added to win.vim. It
 " maps command keys to command strings. These will override the built-in
 " vim-win commands that use the same keys, except for 1) <esc>, which is used
-" for exiting, and 2) ?, which is used for help.
+" for exiting, and 2) ?, which is used for help. The 'Win#exit' string can be
+" used as a command string for exiting vim-win.
 " E.g.,
 " :let g:win_ext_command_map = {
 "        \   'c': 'wincmd c',
@@ -44,6 +45,7 @@ let g:win_disable_version_warning = get(g:, 'win_disable_version_warning', 0)
 "        \   "\<c-p>": 'tabprevious',
 "        \   '=': 'wincmd =',
 "        \   't': 'tabnew',
+"        \   'x': 'Win#exit'
 "        \ }
 let g:win_ext_command_map = get(g:, 'win_ext_command_map', {})
 

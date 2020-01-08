@@ -74,7 +74,8 @@ The following variables can be used to customize the behavior of `vim-win`.
 | `g:win_ext_command_map`         | `{}`    | A dictionary for extending `vim-win`     |
 
 The `g:win_ext_command_map` maps `vim-win` command keys to `vim` command
-strings.
+strings. The `'Win#exit'` string can be used as a command string for exiting
+`vim-win`.
 
 The variables can be customized in your `.vimrc`, as shown in the following
 example.
@@ -99,6 +100,7 @@ let g:win_ext_command_map = {
       \   "\<c-p>": 'tabprevious',
       \   '=': 'wincmd =',
       \   't': 'tabnew',
+      \   'x': 'Win#exit'
       \ }
 ```
 
