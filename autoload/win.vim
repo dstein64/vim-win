@@ -39,23 +39,22 @@ function! s:Contains(list, element)
 endfunction
 
 " Swaps the buffer of the active window with the buffer of the specified
-" window. The specified window becomes the active window after swapping.
-" Only the buffers are swapped (i.e., local options, mappings, abbreviations,
-" etc., are not transferred).
+" window. Only the buffers are swapped (i.e., local options, mappings,
+" abbreviations, etc., are not transferred).
 function! s:Swap(winnr)
   let l:winnr1 = winnr()
   let l:winnr2 = a:winnr
+  let l:winid1 = win_getid(l:winnr1)
+  let l:winid2 = win_getid(l:winnr2)
   let l:bufnr1 = winbufnr(l:winnr1)
   let l:bufnr2 = winbufnr(l:winnr2)
   let l:view1 = winsaveview()
-  execute l:winnr2 . 'wincmd w'
-  let l:view2 = winsaveview()
-  execute 'silent hide ' . l:bufnr1 . 'buffer'
-  call winrestview(l:view1)
-  execute l:winnr1 . 'wincmd w'
+  call win_execute(l:winid2, 'let l:view2 = winsaveview()')
+  let l:cmd = 'noautocmd silent hide ' . l:bufnr1 . 'buffer'
+  call win_execute(l:winid2, l:cmd)
+  call win_execute(l:winid2, 'call winrestview(l:view1)')
   execute 'silent hide ' . l:bufnr2 . 'buffer'
   call winrestview(l:view2)
-  execute l:winnr2 . 'wincmd w'
 endfunction
 
 function! s:GetChar()
@@ -362,10 +361,11 @@ function! win#Win(...)
         wincmd w
       elseif l:char ==# 'W'
         wincmd W
-      elseif l:char ==# 's'
-        let l:swap_prompt = l:prompt + [['None', 's']]
+      elseif l:char ==# 's' || l:char ==# 'S'
+        let l:swap_prompt = l:prompt + [['None', l:char]]
         let l:swap_winnr = s:ScanWinnr(l:swap_prompt)
         if l:swap_winnr !=# 0 | call s:Swap(l:swap_winnr) | endif
+        if l:char ==# 's' | execute l:swap_winnr . 'wincmd w' | endif
       elseif l:code >=# s:code1 && l:code <=# s:code9
         let l:winnr = s:ScanWinnrDigits(l:prompt, [l:char])
         if l:winnr !=# 0 | silent! execute l:winnr . 'wincmd w' | endif
