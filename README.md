@@ -49,6 +49,8 @@ Enter `vim-win` with `<leader>w` or `:Win`. These can be customized (see
 * Hold `<shift>` and use movement keys to resize the active window.
   - *Left* movements decrease width and *right* movements increase width.
   - *Down* movements decrease height and *up* movements increase height.
+* Press `s` or `S` followed by a movement key or window number, to swap buffers.
+  - `s` switches the active window, and `S` retains the active window.
 * Press `s` followed by a movement key or window number, to swap buffers.
 * Press `?` to show a help message.
 * Press `<esc>` to leave `vim-win` or go back (where applicable).
