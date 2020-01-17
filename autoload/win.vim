@@ -49,10 +49,33 @@ function! s:Swap(winnr)
   let l:bufnr1 = winbufnr(l:winnr1)
   let l:bufnr2 = winbufnr(l:winnr2)
   let l:view1 = winsaveview()
-  call win_execute(l:winid2, 'let l:view2 = winsaveview()')
-  let l:cmd = 'noautocmd silent hide ' . l:bufnr1 . 'buffer'
-  call win_execute(l:winid2, l:cmd)
-  call win_execute(l:winid2, 'call winrestview(l:view1)')
+  " The following commands are executed in the context of window 2.
+  let l:commands = [
+        \   'let l:view2 = winsaveview()',
+        \   'noautocmd silent hide ' . l:bufnr1 . 'buffer',
+        \   'call winrestview(l:view1)'
+        \ ]
+  " The following handling can't be factored out to e.g., s:WinExecute,
+  " since it would not be possible to set l:view2 scoped in *this* function.
+  if exists('*win_execute')
+    for l:command in l:commands
+      call win_execute(l:winid2, l:command)
+    endfor
+  else
+    " vim<8.1.1418 and neovim (as of 0.4.3) do not have the win_execute
+    " function.
+    let l:eventignore = &eventignore
+    try
+      let &eventignore = 'all'
+      call win_gotoid(l:winid2)
+      for l:command in l:commands
+        execute l:command
+      endfor
+      call win_gotoid(l:winid1)
+    finally
+      let &eventignore = l:eventignore
+    endtry
+  endif
   execute 'silent hide ' . l:bufnr2 . 'buffer'
   call winrestview(l:view2)
 endfunction
