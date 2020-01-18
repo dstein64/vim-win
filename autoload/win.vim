@@ -269,8 +269,8 @@ function! s:ShowHelp()
         \   '  - Left movements decrease width and right movements increase width.',
         \   '  - Down movements decrease height and up movements increase height.',
         \   '* Press s or S followed by a movement key or window number, to swap buffers.',
-        \   '  - s switches the active window, and S retains the active window.',
-        \   '* Press <esc> to leave vim-win or go back (where applicable).',
+        \   '  - The active window changes with s and is retained with S.',
+        \   '* Press <esc> to leave vim-win (or go back, where applicable).',
         \ ]
   let l:echo_list = []
   call add(l:echo_list, ['Title', "vim-win help\n"])
