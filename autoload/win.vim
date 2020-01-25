@@ -51,8 +51,10 @@ function! s:Swap(winnr)
   let l:view1 = winsaveview()
   " The following commands are executed in the context of window 2.
   let l:commands = [
+        \   'let l:bufhidden2 = &l:bufhidden',
+        \   'setlocal bufhidden=hide',
         \   'let l:view2 = winsaveview()',
-        \   'noautocmd silent hide ' . l:bufnr1 . 'buffer',
+        \   'noautocmd silent ' . l:bufnr1 . 'buffer',
         \   'call winrestview(l:view1)'
         \ ]
   " The following handling can't be factored out to e.g., s:WinExecute,
@@ -76,8 +78,9 @@ function! s:Swap(winnr)
       let &eventignore = l:eventignore
     endtry
   endif
-  execute 'silent hide ' . l:bufnr2 . 'buffer'
+  execute 'silent ' . l:bufnr2 . 'buffer'
   call winrestview(l:view2)
+  let &l:bufhidden = l:bufhidden2
 endfunction
 
 function! s:GetChar()
