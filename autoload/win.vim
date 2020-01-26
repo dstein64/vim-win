@@ -391,8 +391,12 @@ function! win#Win(...)
       elseif l:char ==# 's' || l:char ==# 'S'
         let l:swap_prompt = l:prompt + [['None', l:char]]
         let l:swap_winnr = s:ScanWinnr(l:swap_prompt)
-        if l:swap_winnr !=# 0 | call s:Swap(l:swap_winnr) | endif
-        if l:char ==# 's' | execute l:swap_winnr . 'wincmd w' | endif
+        if l:swap_winnr !=# winnr()
+              \ && l:swap_winnr ># 0
+              \ && l:swap_winnr <= s:WindowCount()
+          call s:Swap(l:swap_winnr)
+          if l:char ==# 's' | execute l:swap_winnr . 'wincmd w' | endif
+        endif
       elseif l:code >=# s:code1 && l:code <=# s:code9
         let l:winnr = s:ScanWinnrDigits(l:prompt, [l:char])
         if l:winnr !=# 0 | silent! execute l:winnr . 'wincmd w' | endif
