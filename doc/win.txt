@@ -29,9 +29,9 @@ Use |packages| or one of the various package managers.
 
 ============================================================================
 3. Usage                                   *win-usage*
-
-Enter |vim-win| with <leader>w or *:Win*. These can be customized (see
-|win-configuration| below).
+                                                               *:Win*
+Enter |vim-win| with <leader>w or |:Win|.
+These can be customized (see |win-configuration| below).
 
 * Arrows or `hjkl` keys are used for movement.
 * There are various ways to change the active window.
