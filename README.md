@@ -49,15 +49,6 @@ See `:help win-usage` for additional details.
 
 The underlying markup is in [win.txt](doc/win.txt).
 
-There is documentation on the following topics.
-
-| Topic               | `:help` *{subject}*       |
-|---------------------|---------------------------|
-| Arguments           | `win-arguments`           |
-| Modifiers           | `win-modifiers`           |
-| Vim Options         | `win-vim-options`         |
-| Configuration       | `win-configuration`       |
-
 ## Demo
 
 <img src="screencast.gif?raw=true" width="800"/>
