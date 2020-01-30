@@ -37,8 +37,9 @@ Use one of the following package managers:
 
 ## Usage
 
-Enter `vim-win` with `<leader>w` or `:Win`. See `:help win-usage` for additional
-details.
+Enter `vim-win` with `<leader>w` or `:Win`.
+
+See `:help win-usage` for additional details.
 
 ## Documentation
 
