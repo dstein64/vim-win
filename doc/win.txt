@@ -1,0 +1,131 @@
+*win.txt*          Plugin for managing windows
+*vim-win*
+
+Author: Daniel Steinberg - https://www.dannyadam.com
+Web: https://github.com/dstein64/vim-win
+
+1. Requirements                            |win-requirements|
+2. Installation                            |win-installation|
+3. Usage                                   |win-usage|
+4. Configuration                           |win-configuration|
+
+|vim-win| is a Vim plugin for managing windows. Built-in functionality includes
+window selection, window buffer swapping, and window resizing. The plugin is
+extensible, allowing additional functionality to be added (see
+|win-configuration| below).
+
+============================================================================
+1. Requirements                            *win-requirements*
+
+* Full functionality
+  - `vim>=8.2` or `nvim>=0.4.0`
+* Limited functionality (no window labels)
+  - `vim>=8.1.1140`
+
+============================================================================
+2. Installation                            *win-installation*
+
+Use |packages| or one of the various package managers.
+
+============================================================================
+3. Usage                                   *win-usage*
+
+Enter |vim-win| with <leader>w or *:Win*. These can be customized (see
+|win-configuration| below).
+
+* Arrows or `hjkl` keys are used for movement.
+* There are various ways to change the active window.
+  - Use movement keys to move to neighboring windows.
+  - Enter a window number (where applicable, press <enter> to submit).
+  - Use `w` or `W` to sequentially move to the next or previous window.
+* Hold <shift> and use movement keys to resize the active window.
+  - `Left` movements decrease width and `right` movements increase width.
+  - `Down` movements decrease height and `up` movements increase height.
+* Press `s` or `S` followed by a movement key or window number, to swap buffers.
+  - The active window changes with `s` and is retained with `S`.
+* Press `?` to show a help message.
+* Press <esc> to leave |vim-win| (or go back, where applicable).
+
+============================================================================
+4. Configuration                           *win-configuration*
+
+By default, |vim-win| is started with <leader>w or |:Win|. These will not be
+clobbered in case they are already used. The |:Win| command takes an optional
+argument specifying how many |vim-win| commands to run (e.g., `:Win 1` would
+exit |vim-win| after the first command). If the optional argument is `0`, which
+is the default, |vim-win| runs until exit.
+ >
+	" The following defaults can be customized in your .vimrc
+	map <leader>w <plug>WinWin
+	command Win :call win#Win()
+
+The following variables can be used to customize the behavior of |vim-win|.
+
+`Variable`
+  Description                       `Default`
+-------------                       -------
+*g:win_resize_height*                 `2`
+  Number of rows to shift when
+  resizing
+*g:win_resize_width*                  `2`
+  Number of columns to shift when
+  resizing
+*g:win_disable_version_warning*       `0`
+  Set to 1 to disable the version
+  warning
+*g:win_ext_command_map*               `{}`
+  A dictionary for extending
+  |vim-win|
+
+The |g:win_ext_command_map| maps |vim-win| command keys to `vim` command
+strings. The *'Win#exit'* string can be used as a command string for exiting
+|vim-win|.
+
+The variables can be customized in your `.vimrc`, as shown in the following
+example.
+ >
+	let g:win_resize_height = 3
+	let g:win_resize_width = 4
+	let g:win_disable_version_warning = 1
+	let g:win_ext_command_map = {
+	      \   'c': 'wincmd c',
+	      \   'C': 'close!',
+	      \   'q': 'quit',
+	      \   'Q': 'quit!',
+	      \   '!': 'qall!',
+	      \   'V': 'wincmd v',
+	      \   'S': 'wincmd s',
+	      \   'n': 'bnext',
+	      \   'N': 'bnext!',
+	      \   'p': 'bprevious',
+	      \   'P': 'bprevious!',
+	      \   "\<c-n>": 'tabnext',
+	      \   "\<c-p>": 'tabprevious',
+	      \   '=': 'wincmd =',
+	      \   't': 'tabnew',
+	      \   'x': 'Win#exit'
+	      \ }
+
+Color Customization ~
+                                           *win-color-customization*
+The following highlight groups can be configured to change |vim-win|'s colors.
+
+Name        Default    Description
+----        -------    -----------
+`WinActive`   |ModeMsg|    Color for the header row text
+`WinInactive` |Type|       Color for sourcing event names
+`WinNeighbor` |Identifier| Color for other event names
+`WinStar`     |Directory|  Color for the time column
+`WinPrompt`   |Special|    Color for the percent column
+
+The highlight groups can be customized in your |.vimrc|, as shown in the
+following example.
+ >
+	" Link WinActive highlight to Error highlight
+	highlight link WinActive Error
+
+	" Specify custom highlighting for WinInactive
+	highlight WinInactive term=bold ctermfg=12 ctermbg=159 guifg=Blue guibg=LightCyan
+
+============================================================================
+ vim:tw=78:ts=4:ft=help:norl:

@@ -1,0 +1,12 @@
+'Win#exit'	win.txt	/*'Win#exit'*
+g:win_disable_version_warning	win.txt	/*g:win_disable_version_warning*
+g:win_ext_command_map	win.txt	/*g:win_ext_command_map*
+g:win_resize_height	win.txt	/*g:win_resize_height*
+g:win_resize_width	win.txt	/*g:win_resize_width*
+vim-win	win.txt	/*vim-win*
+win-color-customization	win.txt	/*win-color-customization*
+win-configuration	win.txt	/*win-configuration*
+win-installation	win.txt	/*win-installation*
+win-requirements	win.txt	/*win-requirements*
+win-usage	win.txt	/*win-usage*
+win.txt	win.txt	/*win.txt*
