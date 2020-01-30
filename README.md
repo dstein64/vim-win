@@ -57,7 +57,6 @@ There is documentation on the following topics.
 | Modifiers           | `win-modifiers`           |
 | Vim Options         | `win-vim-options`         |
 | Configuration       | `win-configuration`       |
-| Color Customization | `win-color-customization` |
 
 ## Demo
 
