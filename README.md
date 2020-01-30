@@ -5,7 +5,7 @@ window selection, window buffer swapping, and window resizing. The plugin is
 extensible, allowing additional functionality to be added (see *Configuration*
 below).
 
-<img src="https://github.com/dstein64/vim-win/blob/master/screenshot.png?raw=true" width="800"/>
+<img src="screenshot.png?raw=true" width="800"/>
 
 ## Requirements
 
@@ -57,18 +57,17 @@ There is documentation on the following topics.
 | Vim Options         | `win-vim-options`         |
 | Configuration       | `win-configuration`       |
 | Color Customization | `win-color-customization` |
-```
 
 ## Demo
 
-<img src="https://github.com/dstein64/vim-win/blob/master/screencast.gif?raw=true" width="800"/>
+<img src="screencast.gif?raw=true" width="800"/>
 
 License
 -------
 
 The source code has an [MIT License](https://en.wikipedia.org/wiki/MIT_License).
 
-See [LICENSE](https://github.com/dstein64/vim-win/blob/master/LICENSE).
+See [LICENSE](LICENSE).
 
 [dein]: https://github.com/Shougo/dein.vim
 [neobundle]: https://github.com/Shougo/neobundle.vim
