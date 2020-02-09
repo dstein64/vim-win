@@ -58,7 +58,7 @@ The underlying markup is in [win.txt](doc/win.txt).
 
 ## Demo
 
-<img src="screencast.gif?raw=true" width="800"/>
+<img src="screencast.gif?raw=true" width="735"/>
 
 License
 -------
