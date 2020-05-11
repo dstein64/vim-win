@@ -228,9 +228,6 @@ function! s:ScanWinnrDigits(echo_list, ...)
       if str2nr(join(l:digits + ['0'], '')) ># l:win_count
         break
       endif
-      if len(l:digits) ==# len(string(l:win_count))
-        return 0
-      endif
     endif
     let l:echo_list = a:echo_list + [['None', join(l:digits, '')]]
     call s:Echo(l:echo_list)
