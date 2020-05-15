@@ -276,6 +276,7 @@ function! s:ShowHelp()
   let l:echo_list = []
   call add(l:echo_list, ['Title', "vim-win help\n"])
   let l:help_text = join(l:help_lines, "\n")
+  " The state is 0 for text outside backticks, and 1 inside backticks.
   let l:state = 0
   let l:highlight_lookup = ['None', 'SpecialKey']
   for l:char in split(l:help_text, '\zs')
