@@ -39,8 +39,8 @@ These can be customized (see |win-configuration| below).
   - Enter a window number (where applicable, press <enter> to submit).
   - Use `w` or `W` to sequentially move to the next or previous window.
 * Hold <shift> and use movement keys to resize the active window.
-  - `Left` movements decrease width and `right` movements increase width.
-  - `Down` movements decrease height and `up` movements increase height.
+  - Left movements decrease width and right movements increase width.
+  - Down movements decrease height and up movements increase height.
 * Press `s` or `S` followed by a movement key or window number, to swap buffers.
   - The active window changes with `s` and is retained with `S`.
 * Press `?` to show a help message.
