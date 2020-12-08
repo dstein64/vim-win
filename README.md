@@ -16,7 +16,8 @@ below).
 
 ## Installation
 
-Use one of the following package managers:
+A package manager can be used to install `vim-win`.
+<details><summary>Examples</summary><br>
 
 * [Vim8 packages][vim8pack]:
   - `git clone https://github.com/dstein64/vim-win ~/.vim/pack/plugins/start/vim-win`
@@ -34,6 +35,8 @@ Use one of the following package managers:
 * [NeoBundle][neobundle]:
   - Add `NeoBundle 'dstein64/vim-win'` to `~/.vimrc`
   - Re-open vim or execute `:source ~/.vimrc`
+
+</details>
 
 ## Usage
 

@@ -262,53 +262,34 @@ function! s:ScanWinnr(echo_list)
 endfunction
 
 function! s:ShowHelp()
-  let l:echo_list = [
-        \   ['Title', 'vim-win help'],
-        \   ['None', "\n"],
-        \   ['None', '* Arrows or '],
-        \   ['SpecialKey', 'hjkl'],
-        \   ['None', ' keys are used for movement.'],
-        \   ['None', "\n"],
-        \   ['None', '* There are various ways to change the active window.'],
-        \   ['None', "\n"],
-        \   ['None', '  - Use movement keys to move to neighboring windows.'],
-        \   ['None', "\n"],
-        \   ['None', '  - Enter a window number (where applicable, press '],
-        \   ['SpecialKey', '<enter>'],
-        \   ['None', ' to submit).'],
-        \   ['None', "\n"],
-        \   ['None', '  - Use '],
-        \   ['SpecialKey', 'w'],
-        \   ['None', ' or '],
-        \   ['SpecialKey', 'W'],
-        \   ['None', ' to sequentially move to the next or previous window.'],
-        \   ['None', "\n"],
-        \   ['None', '* Hold '],
-        \   ['SpecialKey', '<shift>'],
-        \   ['None', ' and use movement keys to resize the active window.'],
-        \   ['None', "\n"],
-        \   ['None', '  - Left movements decrease width and right movements increase width.'],
-        \   ['None', "\n"],
-        \   ['None', '  - Down movements decrease height and up movements increase height.'],
-        \   ['None', "\n"],
-        \   ['None', '* Press '],
-        \   ['SpecialKey', 's'],
-        \   ['None', ' or '],
-        \   ['SpecialKey', 'S'],
-        \   ['None', ' followed by a movement key or window number, to swap buffers.'],
-        \   ['None', "\n"],
-        \   ['None', '  - The active window changes with '],
-        \   ['SpecialKey', 's'],
-        \   ['None', ' and is retained with '],
-        \   ['SpecialKey', 'S'],
-        \   ['None', '.'],
-        \   ['None', "\n"],
-        \   ['None', '* Press '],
-        \   ['SpecialKey', '<esc>'],
-        \   ['None', ' to leave vim-win (or go back, where applicable).'],
-        \   ['None', "\n"],
-        \   ['Question', '[Press any key to continue]'],
+  let l:help_lines = [
+        \   '* Arrows or `hjkl` keys are used for movement.',
+        \   '* There are various ways to change the active window.',
+        \   '  - Use movement keys to move to neighboring windows.',
+        \   '  - Enter a window number (where applicable, press `<enter>` to submit).',
+        \   '  - Use `w` or `W` to sequentially move to the next or previous window.',
+        \   '* Hold `<shift>` and use movement keys to resize the active window.',
+        \   '  - Left movements decrease width and right movements increase width.',
+        \   '  - Down movements decrease height and up movements increase height.',
+        \   '* Press `s` or `S` followed by a movement key or window number, to swap'
+        \   . ' buffers.',
+        \   '  - The active window changes with `s` and is retained with `S`.',
+        \   '* Press `<esc>` to leave vim-win (or go back, where applicable).',
         \ ]
+  let l:echo_list = []
+  call add(l:echo_list, ['Title', "vim-win help\n"])
+  let l:help_text = join(l:help_lines, "\n")
+  " The state is 0 for text outside backticks, and 1 inside backticks.
+  let l:state = 0
+  let l:highlight_lookup = ['None', 'SpecialKey']
+  for l:char in split(l:help_text, '\zs')
+    if l:char ==# '`'
+      let l:state = !l:state
+      continue
+    endif
+    call add(l:echo_list, [l:highlight_lookup[l:state], l:char])
+  endfor
+  call add(l:echo_list, ['Question', "\n[Press any key to continue]"])
   call s:Echo(l:echo_list)
   call s:GetChar()
   redraw | echo ''
