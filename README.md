@@ -10,7 +10,7 @@ below).
 ## Requirements
 
 * Full functionality
-  - `vim>=8.2` or `nvim>=0.4.0`
+  - `vim>=8.1.2269` or `nvim>=0.4.0`
 * Limited functionality (no window labels)
   - `vim>=8.1.1140`
 

@@ -1,4 +1,7 @@
-let s:popupwin = has('popupwin')
+" On Vim, check for popup_create/popup_close instead of +popupwin, since there
+" were versions of Vim (8.1.2269) that had had those functions, but
+" didn't yet specify a +popupwin feature.
+let s:popupwin = exists('*popup_create') && exists('*popup_close')
 let s:floatwin = exists('*nvim_open_win') && exists('*nvim_win_close')
 
 let s:code0 = char2nr('0')
@@ -350,7 +353,7 @@ function! s:CheckVersion()
   endif
   if !g:win_disable_version_warning && !s:popupwin && !s:floatwin
     let l:message_lines = [
-          \   'Full vim-win functionality requires vim>=8.2 or nvim>=0.4.0.',
+          \   'Full vim-win functionality requires vim>=8.1.2269 or nvim>=0.4.0.',
           \   'Use :version to check the current version.',
           \   'Set g:win_disable_version_warning = 1 to disable this warning.'
           \ ]
