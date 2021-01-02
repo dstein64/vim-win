@@ -101,6 +101,11 @@ function! s:GetChar()
   if type(l:char) ==# v:t_number
     let l:char = nr2char(l:char)
   endif
+  " On Cygwin, <c-c> does not raise "Vim:Interrupt", so it would still be
+  " <c-c> at this point. Convert to <esc>.
+  if l:char ==# "\<c-c>"
+    let l:char = "\<esc>"
+  endif
   return l:char
 endfunction
 
