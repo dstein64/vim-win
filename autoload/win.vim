@@ -321,7 +321,7 @@ function! s:ShowWarning(message)
 endfunction
 
 function! s:Beep()
-  execute "normal \<esc>"
+  execute "normal! \<esc>"
 endfunction
 
 " Check vim/nvim version, show corresponding messages, and return a boolean
