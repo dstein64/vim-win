@@ -352,8 +352,15 @@ endfunction
 function! s:Init()
   let l:state = {
         \   'winwidth': &winwidth,
-        \   'winheight': &winheight
+        \   'winheight': &winheight,
+        \   'cmdheight': &cmdheight,
         \ }
+  if &cmdheight ==# 0
+    " Neovim supports cmdheight=0. When used, temporarily change to 1 to work
+    " around the vim-win prompt not showing otherwise and avoid 'Press ENTER
+    " or type command to continue' after using the plugin.
+    set cmdheight=1
+  endif
   " Minimize winwidth and winheight so that moving around doesn't unexpectedly
   " cause window resizing.
   let &winwidth = max([1, &winminwidth])
@@ -362,6 +369,7 @@ function! s:Init()
 endfunction
 
 function! s:Restore(state)
+  let &cmdheight = a:state['cmdheight']
   let &winwidth = a:state['winwidth']
   let &winheight = a:state['winheight']
 endfunction
@@ -441,6 +449,6 @@ function! win#Win(...)
     endtry
   endwhile
   call s:RemoveWindowLabels(l:label_winids)
-  call s:Restore(l:state)
   redraw | echo ''
+  call s:Restore(l:state)
 endfunction
