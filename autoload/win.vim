@@ -354,12 +354,20 @@ function! s:Init()
         \   'winwidth': &winwidth,
         \   'winheight': &winheight,
         \   'cmdheight': &cmdheight,
+        \   'laststatus': &laststatus,
         \ }
   if &cmdheight ==# 0
     " Neovim supports cmdheight=0. When used, temporarily change to 1 to work
     " around the vim-win prompt not showing otherwise and avoid 'Press ENTER
     " or type command to continue' after using the plugin.
     set cmdheight=1
+  endif
+  " Make sure the last window has a status line, to serve as a divider between
+  " the info message and the last window.
+  if has('nvim') && &laststatus ==# 3
+    " Keep the existing value
+  else
+    set laststatus=2
   endif
   " Minimize winwidth and winheight so that moving around doesn't unexpectedly
   " cause window resizing.
@@ -369,6 +377,7 @@ function! s:Init()
 endfunction
 
 function! s:Restore(state)
+  let &laststatus = a:state['laststatus']
   let &cmdheight = a:state['cmdheight']
   let &winwidth = a:state['winwidth']
   let &winheight = a:state['winheight']
