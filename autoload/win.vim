@@ -4,6 +4,8 @@
 let s:popupwin = exists('*popup_create') && exists('*popup_close')
 let s:floatwin = exists('*nvim_open_win') && exists('*nvim_win_close')
 
+let s:winmove = exists('*win_move_separator') && exists('*win_move_statusline')
+
 let s:code0 = char2nr('0')
 let s:code1 = char2nr('1')
 let s:code9 = char2nr('9')
@@ -13,9 +15,18 @@ let s:down_chars = ['j', "\<down>"]
 let s:up_chars = ['k', "\<up>"]
 let s:right_chars = ['l', "\<right>"]
 let s:shift_left_chars = ['H', "\<s-left>"]
+let s:ctrl_left_chars = ["\<c-h>", "\<c-left>"]
 let s:shift_down_chars = ['J', "\<s-down>"]
+let s:ctrl_down_chars = ["\<c-j>", "\<c-down>"]
 let s:shift_up_chars = ['K', "\<s-up>"]
+let s:ctrl_up_chars = ["\<c-k>", "\<c-up>"]
 let s:shift_right_chars = ['L', "\<s-right>"]
+let s:ctrl_right_chars = ["\<c-l>", "\<c-right>"]
+
+let s:resize_chars = s:shift_left_chars + s:ctrl_left_chars
+      \ + s:shift_down_chars + s:ctrl_down_chars
+      \ + s:shift_up_chars + s:ctrl_up_chars
+      \ + s:shift_right_chars + s:ctrl_right_chars
 
 " Returns window count, with special handling to exclude floating and external
 " windows in neovim. The windows with numbers less than or equal to the value
@@ -273,14 +284,29 @@ function! s:ShowHelp()
         \   '  - Use movement keys to move to neighboring windows.',
         \   '  - Enter a window number (where applicable, press `<enter>` to submit).',
         \   '  - Use `w` or `W` to sequentially move to the next or previous window.',
-        \   '* Hold `<shift>` and use movement keys to resize the active window.',
-        \   '  - Left movements decrease width and right movements increase width.',
-        \   '  - Down movements decrease height and up movements increase height.',
+        \ ]
+  if s:winmove
+    call extend(l:help_lines, [
+          \   '* Hold `<shift>` and use movement keys to resize the active window.',
+          \   '  - Left and right movements shift the right border.',
+          \   '  - Down and up movements shift the bottom border.',
+          \   '* Hold `<control>` and use movement keys to resize the active window.',
+          \   '  - Left and right movements shift the left border.',
+          \   '  - Down and up movements shift the top border.',
+          \ ])
+  else
+    call extend(l:help_lines, [
+          \   '* Hold `<shift>` and use movement keys to resize the active window.',
+          \   '  - Left movements decrease width and right movements increase width.',
+          \   '  - Down movements decrease height and up movements increase height.',
+          \ ])
+  endif
+  call extend(l:help_lines, [
         \   '* Press `s` or `S` followed by a movement key or window number, to swap'
         \   . ' buffers.',
         \   '  - The active window changes with `s` and is retained with `S`.',
         \   '* Press `<esc>` to leave vim-win (or go back, where applicable).',
-        \ ]
+        \ ])
   let l:echo_list = []
   call add(l:echo_list, ['Title', "vim-win help\n"])
   let l:help_text = join(l:help_lines, "\n")
@@ -441,14 +467,48 @@ function! win#Win(...)
         wincmd k
       elseif s:Contains(s:right_chars, l:char)
         wincmd l
-      elseif s:Contains(s:shift_left_chars, l:char)
-        execute g:win_resize_width ' wincmd <'
-      elseif s:Contains(s:shift_right_chars, l:char)
-        execute g:win_resize_width ' wincmd >'
-      elseif s:Contains(s:shift_up_chars, l:char)
-        execute g:win_resize_height ' wincmd +'
-      elseif s:Contains(s:shift_down_chars, l:char)
-        execute g:win_resize_height ' wincmd -'
+      elseif s:Contains(s:resize_chars, l:char)
+        if s:winmove
+          if s:Contains(s:shift_left_chars, l:char)
+            call win_move_separator(0, -g:win_resize_width)
+          elseif s:Contains(s:ctrl_left_chars, l:char)
+            if winnr('h') !=# winnr()
+              call win_move_separator(winnr('h'), -g:win_resize_width)
+            endif
+          elseif s:Contains(s:shift_right_chars, l:char)
+            call win_move_separator(0, g:win_resize_width)
+          elseif s:Contains(s:ctrl_right_chars, l:char)
+            if winnr('h') !=# winnr()
+              call win_move_separator(winnr('h'), g:win_resize_width)
+            endif
+          elseif s:Contains(s:shift_up_chars, l:char)
+            " Even though this operates on the current window, make sure there is
+            " a window below, to prevent resizing the command line.
+            if winnr('j') !=# winnr()
+              call win_move_statusline(0, -g:win_resize_width)
+            endif
+          elseif s:Contains(s:ctrl_up_chars, l:char)
+            if winnr('k') !=# winnr()
+              call win_move_statusline(winnr('k'), -g:win_resize_width)
+            endif
+          elseif s:Contains(s:shift_down_chars, l:char)
+            call win_move_statusline(0, g:win_resize_width)
+          elseif s:Contains(s:ctrl_down_chars, l:char)
+            if winnr('k') !=# winnr()
+              call win_move_statusline(winnr('k'), g:win_resize_width)
+            endif
+          endif
+        else
+          if s:Contains(s:shift_left_chars, l:char)
+            execute g:win_resize_width . ' wincmd <'
+          elseif s:Contains(s:shift_right_chars, l:char)
+            execute g:win_resize_width . ' wincmd >'
+          elseif s:Contains(s:shift_up_chars, l:char)
+            execute g:win_resize_width . ' wincmd +'
+          elseif s:Contains(s:shift_down_chars, l:char)
+            execute g:win_resize_width . ' wincmd -'
+          endif
+        endif
       endif
     catch
       call s:Beep()
