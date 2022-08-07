@@ -45,7 +45,7 @@ These can be customized (see |win-configuration| below).
 * Hold <control> and use movement keys to resize the active window.
   - Left and right movements shift the left border.
   - Down and up movements shift the top border.
-  - Not available for `vim<8.2.4052` and `nvim<0.7.0`:
+  - Not available for `vim<8.2.4052` and `nvim<0.7.0`.
 * Press `s` or `S` followed by a movement key or window number, to swap buffers.
   - The active window changes with `s` and is retained with `S`.
 * Press `?` to show a help message.
