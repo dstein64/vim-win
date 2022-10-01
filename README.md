@@ -59,9 +59,11 @@ See `:help win-usage` for additional details.
 
 The underlying markup is in [win.txt](doc/win.txt).
 
-## Demo
+<details open><summary><h2>Demo</h2></summary>
 
 <img src="screencast.gif?raw=true" width="735"/>
+
+</details>
 
 License
 -------
