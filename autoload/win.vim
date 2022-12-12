@@ -39,8 +39,8 @@ function! s:WindowCount()
     return winnr('$')
   endif
   let l:win_count = 0
-  for l:winid in range(1, winnr('$'))
-    let l:config = nvim_win_get_config(win_getid(l:winid))
+  for l:winnr in range(1, winnr('$'))
+    let l:config = nvim_win_get_config(win_getid(l:winnr))
     if !get(l:config, 'external', 0) && get(l:config, 'relative', '') ==# ''
       let l:win_count += 1
     endif
