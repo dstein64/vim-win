@@ -137,12 +137,14 @@ function! s:OpenPopup(text, highlight, row, col)
           \   'col': a:col,
           \ }
     let l:winid = popup_create(a:text, l:options)
+    let l:buf = winbufnr(l:winid)
+    call setbufvar(l:buf, '&matchpairs', '')
   elseif s:floatwin
-    if has_key(s:, 'floatwin_avail_bufnrs') && len(s:floatwin_avail_bufnrs) > 0
-      let l:buf = s:floatwin_avail_bufnrs[-1]
-      call remove(s:floatwin_avail_bufnrs, -1)
+    if has_key(s:, 'floatwin_avail_bufnrs') && !empty(s:floatwin_avail_bufnrs)
+      let l:buf = remove(s:floatwin_avail_bufnrs, -1)
     else
       let l:buf = nvim_create_buf(0, 1)
+      call nvim_buf_set_option(l:buf, 'matchpairs', '')
     endif
     call nvim_buf_set_lines(l:buf, 0, -1, 1, [a:text])
     let l:options = {
