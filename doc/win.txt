@@ -75,9 +75,9 @@ The following variables can be used to customize the behavior of |vim-win|.
 *g:win_resize_width*                  `2`
   Number of columns to shift when
   resizing
-*g:win_disable_version_warning*       `0`
-  Set to 1 to disable the version
-  warning
+*g:win_disable_version_warning*       |v:false|
+  Set to |v:true| to disable the
+  version warning
 *g:win_ext_command_map*               `{}`
   A dictionary for extending
   |vim-win|

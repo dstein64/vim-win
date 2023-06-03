@@ -22,7 +22,8 @@ endif
 
 let g:win_resize_height = get(g:, 'win_resize_height', 2)
 let g:win_resize_width = get(g:, 'win_resize_width', 2)
-let g:win_disable_version_warning = get(g:, 'win_disable_version_warning', 0)
+let g:win_disable_version_warning =
+      \ get(g:, 'win_disable_version_warning', v:false)
 " g:win_ext_command_map allows additional commands to be added to win.vim. It
 " maps command keys to command strings. These will override the built-in
 " vim-win commands that use the same keys, except for 1) <esc>, which is used
