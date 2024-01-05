@@ -165,24 +165,18 @@ endfunction
 
 function! s:ClosePopup(winid)
   if s:popupwin
-    " The popup may no longer exist. #2
-    if !empty(popup_getpos(a:winid))
-      call popup_close(a:winid)
-    endif
+    call popup_close(a:winid)
   elseif s:floatwin
-    " The floating window may no longer exist. #2
-    if nvim_win_is_valid(a:winid)
-      " Keep track of available floatwin buffer numbers, so they can be
-      " reused. This prevents the buffer list numbers from getting high from
-      " usage of vim-win. This list is used by OpenPopup.
-      if !has_key(s:, 'floatwin_avail_bufnrs')
-        let s:floatwin_avail_bufnrs = []
-      endif
-      call add(s:floatwin_avail_bufnrs, winbufnr(a:winid))
-      " The buffer is not deleted, which is intended since it's reused by
-      " OpenPopup.
-      call nvim_win_close(a:winid, 1)
+    " Keep track of available floatwin buffer numbers, so they can be reused.
+    " This prevents the buffer list numbers from getting high from usage of
+    " vim-win. This list is used by OpenPopup.
+    if !has_key(s:, 'floatwin_avail_bufnrs')
+      let s:floatwin_avail_bufnrs = []
     endif
+    call add(s:floatwin_avail_bufnrs, winbufnr(a:winid))
+    " The buffer is not deleted, which is intended since it's reused by
+    " OpenPopup.
+    call nvim_win_close(a:winid, 1)
   endif
 endfunction
 
