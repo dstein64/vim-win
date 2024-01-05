@@ -164,6 +164,10 @@ function! s:OpenPopup(text, highlight, row, col)
 endfunction
 
 function! s:ClosePopup(winid)
+  " The popup may no longer exist. #2
+  if empty(getwininfo(a:winid))
+    return
+  endif
   if s:popupwin
     call popup_close(a:winid)
   elseif s:floatwin
