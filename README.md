@@ -4,8 +4,7 @@
 
 `vim-win` is a Vim plugin for managing windows. Built-in functionality includes
 window selection, window buffer swapping, and window resizing. The plugin is
-extensible, allowing additional functionality to be added (see *Configuration*
-below).
+extensible, allowing additional functionality to be added.
 
 <img src="screenshot.png?raw=true" width="800"/>
 
