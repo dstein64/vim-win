@@ -117,11 +117,11 @@ The following highlight groups can be configured to change |vim-win|'s colors.
 
 Name        Default    Description
 ----        -------    -----------
-`WinActive`   `ModeMsg`    Color for the header row text
-`WinInactive` `Type`       Color for sourcing event names
-`WinNeighbor` `Identifier` Color for other event names
-`WinStar`     `Directory`  Color for the time column
-`WinPrompt`   `Special`    Color for the percent column
+`WinActive`   `DiffAdd`    Color for the active window label
+`WinInactive` `Todo`       Color for inactive window labels
+`WinNeighbor` `Todo`       Color for neighbor window labels
+`WinStar`     `StatusLine` Color for the command line star (asterisk)
+`WinPrompt`   `ModeMsg`    Color for the command line prompt
 
 The highlight groups can be customized in your |.vimrc|, as shown in the
 following example.
