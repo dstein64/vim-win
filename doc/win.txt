@@ -78,8 +78,6 @@ The following variables can be used to customize the behavior of |vim-win|.
 *g:win_ext_command_map*               `{}`
   A dictionary for extending
   |vim-win|
-*g:win_init_keys*                     `''`
-  Initial keypresses
 *g:win_resize_height*                 `2`
   Number of rows to shift when
   resizing

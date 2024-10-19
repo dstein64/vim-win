@@ -47,7 +47,6 @@ let g:win_disable_version_warning =
 "        \   'x': 'Win#exit'
 "        \ }
 let g:win_ext_command_map = get(g:, 'win_ext_command_map', {})
-let g:win_init_keys = get(g:, 'win_init_keys', '')
 let g:win_resize_height = get(g:, 'win_resize_height', 2)
 let g:win_resize_width = get(g:, 'win_resize_width', 2)
 

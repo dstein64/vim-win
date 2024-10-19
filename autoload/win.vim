@@ -497,7 +497,6 @@ function! win#Win(...)
   let l:state = s:Init()
   let l:max_reps = str2nr(get(a:, 1, '0'))
   let l:reps = 0
-  call feedkeys(g:win_init_keys, 't')
   while l:max_reps <=# 0 || l:reps <# l:max_reps
     let l:reps += 1
     try
