@@ -36,6 +36,7 @@ These can be customized (see |win-configuration| below).
   - Use movement keys to move to neighboring windows.
   - Enter a window number (where applicable, press <enter> to submit).
   - Use `w` or `W` to sequentially move to the next or previous window.
+  - Press `g` to start letter mode, followed by entering a window letter.
 * Hold <shift> and use movement keys to resize the active window.
   - Left and right movements shift the right border.
   - Down and up movements shift the bottom border.
@@ -48,6 +49,8 @@ These can be customized (see |win-configuration| below).
   - Not available for `vim<8.2.4052` and `nvim<0.7.0`.
 * Press `s` or `S` followed by a movement key or window number, to swap buffers.
   - The active window changes with `s` and is retained with `S`.
+  - Rather than using a movement key or window number for swapping, a window
+    letter can be used by entering letter mode with `g`, after pressing `s` or `S`.
 * Press `?` to show a help message.
 * Press <esc> to leave |vim-win| (or go back, where applicable).
 
@@ -81,6 +84,8 @@ The following variables can be used to customize the behavior of |vim-win|.
 *g:win_ext_command_map*               `{}`
   A dictionary for extending
   |vim-win|
+*g:win_init_keys*                     `''`
+  Initial keypresses
 
 The |g:win_ext_command_map| maps |vim-win| command keys to `vim` command
 strings. The *Win#exit* string can be used as a command string for exiting

@@ -9,6 +9,8 @@ let s:winmove = exists('*win_move_separator') && exists('*win_move_statusline')
 let s:code0 = char2nr('0')
 let s:code1 = char2nr('1')
 let s:code9 = char2nr('9')
+let s:code_a = char2nr('a')
+let s:code_z = char2nr('z')
 let s:esc_chars = ["\<esc>"]
 let s:left_chars = ['h', "\<left>"]
 let s:down_chars = ['j', "\<down>"]
@@ -27,6 +29,8 @@ let s:resize_chars = s:shift_left_chars + s:ctrl_left_chars
       \ + s:shift_down_chars + s:ctrl_down_chars
       \ + s:shift_up_chars + s:ctrl_up_chars
       \ + s:shift_right_chars + s:ctrl_right_chars
+
+let s:label_winids = []
 
 " Returns window count, with special handling to exclude floating and external
 " windows in neovim. The windows with numbers less than or equal to the value
@@ -184,15 +188,54 @@ function! s:ClosePopup(winid)
   endif
 endfunction
 
-" Label windows with winnr and return winids of the labels.
-function! s:AddWindowLabels()
-  let l:label_winids = []
+" Convert a number to bijective base-26. This is the same number system that's
+" used for the columns in Microsoft Excel.
+" https://en.wikipedia.org/wiki/Bijective_numeration#The_bijective_base-26_system
+" WARN: There is no error checking for a valid input.
+function! s:ToBijective26(num)
+  let l:num = a:num
+  let l:chars = 'abcdefghijklmnopqrstuvwxyz'
+  let l:result = []
+  while l:num !=# 0
+    call add(l:result, l:chars[(l:num - 1) % 26])
+    let l:num = (l:num - 1) / 26
+  endwhile
+  call reverse(l:result)
+  return join(l:result, '')
+endfunction
+
+" WARN: There is no error checking for a valid input.
+function! s:FromBijective26(str)
+  let l:num = 0
+  let l:multiplier = 1
+  for l:c in split(reverse(copy(a:str)), '\zs')
+    let l:x = char2nr(l:c) - s:code_a + 1
+    let l:num += l:x * l:multiplier
+    let l:multiplier *= 26
+  endfor
+  return l:num
+endfunction
+
+function! s:RemoveWindowLabels()
+  for l:label_winid in s:label_winids
+    call s:ClosePopup(l:label_winid)
+  endfor
+  if len(s:label_winids) ># 0 | call remove(s:label_winids, 0, -1) | endif
+endfunction
+
+" Label windows with winnr and return winids of the labels. The optional
+" argument specifies whether alphabetic labels (bijective base-26) will be
+" used.
+function! s:LabelWindows(...)
+  let l:alpha = get(a:, 1, v:false)
+  call s:RemoveWindowLabels()
   let l:win_count = s:WindowCount()
   for l:winnr in range(1, l:win_count)
     if winheight(l:winnr) ==# 0 || winwidth(l:winnr) ==# 0 | continue | endif
     let [l:row, l:col] = win_screenpos(l:winnr)
     let l:is_active = l:winnr ==# winnr()
-    let l:label = '[' . l:winnr
+    let l:label = '['
+    let l:label .= l:alpha ? s:ToBijective26(l:winnr) : l:winnr
     if l:winnr ==# winnr()
       let l:label .= '*'
     endif
@@ -208,17 +251,8 @@ function! s:AddWindowLabels()
       let l:highlight = 'WinActive'
     endif
     let l:label_winid = s:OpenPopup(l:label, l:highlight, l:row, l:col)
-    if l:label_winid !=# 0 | call add(l:label_winids, l:label_winid) | endif
+    if l:label_winid !=# 0 | call add(s:label_winids, l:label_winid) | endif
   endfor
-  return l:label_winids
-endfunction
-
-" Remove the specified windows, and empty the list.
-function! s:RemoveWindowLabels(label_winids)
-  for l:label_winid in a:label_winids
-    call s:ClosePopup(l:label_winid)
-  endfor
-  if len(a:label_winids) ># 0 | call remove(a:label_winids, 0, -1) | endif
 endfunction
 
 " Takes a list of lists. Each sublist is comprised of a highlight group name
@@ -262,6 +296,32 @@ function! s:ScanWinnrDigits(echo_list, ...)
   return l:winnr <=# l:win_count ? l:winnr : 0
 endfunction
 
+" Scans user input for an alphabetic window string (labeled with bijective
+" base 26), and return the corresponding window number. The argument specifies
+" the initial output (see the documentation for s:Echo).
+function! s:ScanWinAlpha(echo_list)
+  let l:letters = []
+  let l:win_count = s:WindowCount()
+  while 1
+    if len(l:letters) ># 0
+      if l:letters[-1] ==# "\<cr>"
+        call remove(l:letters, -1)
+        break
+      endif
+      let l:code = char2nr(l:letters[-1])
+      if l:code <# s:code_a || l:code ># s:code_z | return 0 | endif
+      if s:FromBijective26(join(l:letters + ['a'], '')) ># l:win_count
+        break
+      endif
+    endif
+    let l:echo_list = a:echo_list + [['None', join(l:letters, '')]]
+    call s:Echo(l:echo_list)
+    call add(l:letters, tolower(s:GetChar()))
+  endwhile
+  let l:winnr = s:FromBijective26(join(l:letters, ''))
+  return l:winnr <=# l:win_count ? l:winnr : 0
+endfunction
+
 " Scans user input for a window number or movement, returning the target. The
 " argument specifies the initial output (see the documentation for s:Echo).
 function! s:ScanWinnr(echo_list)
@@ -279,6 +339,9 @@ function! s:ScanWinnr(echo_list)
     let l:winnr = winnr('k')
   elseif s:Contains(s:right_chars, l:char)
     let l:winnr = winnr('l')
+  elseif l:char ==# 'g'
+    call s:LabelWindows(v:true)
+    let l:winnr = s:ScanWinAlpha(a:echo_list + [['None', l:char]])
   endif
   return l:winnr
 endfunction
@@ -290,6 +353,8 @@ function! s:ShowHelp()
         \   '  - Use movement keys to move to neighboring windows.',
         \   '  - Enter a window number (where applicable, press `<enter>` to submit).',
         \   '  - Use `w` or `W` to sequentially move to the next or previous window.',
+        \   '  - Use `w` or `W` to sequentially move to the next or previous window.',
+        \   '  - Press `g` to start letter mode, followed by entering a window letter.',
         \ ]
   if s:winmove
     call extend(l:help_lines, [
@@ -311,6 +376,10 @@ function! s:ShowHelp()
         \   '* Press `s` or `S` followed by a movement key or window number, to swap'
         \   . ' buffers.',
         \   '  - The active window changes with `s` and is retained with `S`.',
+        \   '  - Rather than using a movement key or window number for swapping, a'
+        \   . ' window',
+        \   '    letter can be used by entering letter mode with `g`, after pressing'
+        \   . ' `s` or `S`.',
         \   '* Press `<esc>` to leave vim-win (or go back, where applicable).',
         \ ])
   let l:echo_list = []
@@ -419,7 +488,6 @@ endfunction
 " argument specifying how many times to run (runs until exiting by default).
 function! win#Win(...)
   if !s:CheckVersion() | return | endif
-  let l:label_winids = []
   let l:prompt = [
         \   ['WinStar', '*'],
         \   ['None', ' '],
@@ -429,6 +497,7 @@ function! win#Win(...)
   let l:state = s:Init()
   let l:max_reps = str2nr(get(a:, 1, '0'))
   let l:reps = 0
+  call feedkeys(g:win_init_keys, 't')
   while l:max_reps <=# 0 || l:reps <# l:max_reps
     let l:reps += 1
     try
@@ -437,8 +506,7 @@ function! win#Win(...)
         call s:ShowError('vim-win does not work with the command-line window')
         break
       endif
-      call s:RemoveWindowLabels(l:label_winids)
-      let l:label_winids = s:AddWindowLabels()
+      call s:LabelWindows()
       call s:Echo(l:prompt)
       let l:char = s:GetChar()
       let l:code = char2nr(l:char)
@@ -462,6 +530,11 @@ function! win#Win(...)
           call s:Swap(l:swap_winnr)
           if l:char ==# 's' | execute l:swap_winnr . 'wincmd w' | endif
         endif
+      elseif l:char ==# 'g'
+        call s:LabelWindows(v:true)
+        let l:g_prompt = l:prompt + [['None', l:char]]
+        let l:winnr = s:ScanWinAlpha(l:g_prompt)
+        if l:winnr !=# 0 | silent! execute l:winnr . 'wincmd w' | endif
       elseif l:code >=# s:code1 && l:code <=# s:code9
         let l:winnr = s:ScanWinnrDigits(l:prompt, [l:char])
         if l:winnr !=# 0 | silent! execute l:winnr . 'wincmd w' | endif
@@ -523,7 +596,7 @@ function! win#Win(...)
       break
     endtry
   endwhile
-  call s:RemoveWindowLabels(l:label_winids)
+  call s:RemoveWindowLabels()
   redraw | echo ''
   call s:Restore(l:state)
 endfunction
