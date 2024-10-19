@@ -72,12 +72,6 @@ The following variables can be used to customize the behavior of |vim-win|.
 `Variable`
   Description                       `Default`
 -------------                       -------
-*g:win_resize_height*                 `2`
-  Number of rows to shift when
-  resizing
-*g:win_resize_width*                  `2`
-  Number of columns to shift when
-  resizing
 *g:win_disable_version_warning*       |v:false|
   Set to |v:true| to disable the
   version warning
@@ -86,6 +80,12 @@ The following variables can be used to customize the behavior of |vim-win|.
   |vim-win|
 *g:win_init_keys*                     `''`
   Initial keypresses
+*g:win_resize_height*                 `2`
+  Number of rows to shift when
+  resizing
+*g:win_resize_width*                  `2`
+  Number of columns to shift when
+  resizing
 
 The |g:win_ext_command_map| maps |vim-win| command keys to `vim` command
 strings. The *Win#exit* string can be used as a command string for exiting

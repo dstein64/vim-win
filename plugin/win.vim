@@ -20,8 +20,6 @@ endif
 " * User Configuration
 " ************************************************************
 
-let g:win_resize_height = get(g:, 'win_resize_height', 2)
-let g:win_resize_width = get(g:, 'win_resize_width', 2)
 let g:win_disable_version_warning =
       \ get(g:, 'win_disable_version_warning', v:false)
 " g:win_ext_command_map allows additional commands to be added to win.vim. It
@@ -50,6 +48,8 @@ let g:win_disable_version_warning =
 "        \ }
 let g:win_ext_command_map = get(g:, 'win_ext_command_map', {})
 let g:win_init_keys = get(g:, 'win_init_keys', '')
+let g:win_resize_height = get(g:, 'win_resize_height', 2)
+let g:win_resize_width = get(g:, 'win_resize_width', 2)
 
 " The default highlight groups (for colors) are specified below.
 " Change these default colors by defining or linking the corresponding
