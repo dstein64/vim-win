@@ -1,3 +1,6 @@
+" TODO: Modeling the main loop with a state machine could permit a cleaner and
+" more robust implementation.
+
 " On Vim, check for popup_create/popup_close instead of +popupwin, since there
 " were versions of Vim (8.1.2269) that had had those functions, but didn't yet
 " specify a +popupwin feature.
