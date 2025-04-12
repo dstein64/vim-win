@@ -161,7 +161,8 @@ function! s:OpenPopup(text, highlight, row, col)
           \   'height': 1,
           \   'width': len(a:text),
           \   'row': a:row - 1,
-          \   'col': a:col - 1
+          \   'col': a:col - 1,
+          \   'border': 'none',
           \ }
     let l:winid = nvim_open_win(l:buf, 0, l:options)
     let l:winhighlight = 'Normal:' . a:highlight
