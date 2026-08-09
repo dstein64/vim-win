@@ -46,7 +46,7 @@ function! s:WindowCount()
     return winnr('$')
   endif
   let l:win_count = 0
-  for l:winnr in range(1, winnr('$'))
+  for l:winnr in nvim_tabpage_list_wins(0)
     let l:config = nvim_win_get_config(win_getid(l:winnr))
     if !get(l:config, 'external', 0) && get(l:config, 'relative', '') ==# ''
       let l:win_count += 1
@@ -166,7 +166,7 @@ function! s:OpenPopup(text, highlight, row, col)
           \ }
     let l:winid = nvim_open_win(l:buf, 0, l:options)
     let l:winhighlight = 'Normal:' . a:highlight
-    call setwinvar(win_id2win(l:winid), '&winhighlight', l:winhighlight)
+    call setwinvar(l:winid, '&winhighlight', l:winhighlight)
   endif
   return l:winid
 endfunction
