@@ -37,17 +37,15 @@ let s:label_winids = []
 
 " Returns window count, with special handling to exclude floating and external
 " windows in neovim. The windows with numbers less than or equal to the value
-" returned are assumed non-floating and non-external windows. The
-" documentation for ":h CTRL-W_w" says "windows are numbered from top-left to
-" bottom-right", which does not ensure this, but checks revealed that floating
-" windows are numbered higher than ordinary windows, regardless of position.
+" returned are assumed non-floating and non-external windows, since ordinary
+" windows precede floating windows in the window list.
 function! s:WindowCount()
   if !has('nvim') || !exists('*nvim_win_get_config')
     return winnr('$')
   endif
   let l:win_count = 0
-  for l:winnr in range(1, winnr('$'))
-    let l:config = nvim_win_get_config(win_getid(l:winnr))
+  for l:winid in nvim_tabpage_list_wins(0)
+    let l:config = nvim_win_get_config(l:winid)
     if !get(l:config, 'external', 0) && get(l:config, 'relative', '') ==# ''
       let l:win_count += 1
     endif
@@ -166,7 +164,7 @@ function! s:OpenPopup(text, highlight, row, col)
           \ }
     let l:winid = nvim_open_win(l:buf, 0, l:options)
     let l:winhighlight = 'Normal:' . a:highlight
-    call setwinvar(win_id2win(l:winid), '&winhighlight', l:winhighlight)
+    call setwinvar(l:winid, '&winhighlight', l:winhighlight)
   endif
   return l:winid
 endfunction
