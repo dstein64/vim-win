@@ -355,7 +355,6 @@ function! s:ShowHelp()
         \   '  - Use movement keys to move to neighboring windows.',
         \   '  - Enter a window number (where applicable, press `<enter>` to submit).',
         \   '  - Use `w` or `W` to sequentially move to the next or previous window.',
-        \   '  - Use `w` or `W` to sequentially move to the next or previous window.',
         \   '  - Press `g` to start letter mode, followed by entering a window letter.',
         \ ]
   if s:winmove
